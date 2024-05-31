@@ -64,6 +64,7 @@ class GenericDatasetAccessor(ABC):
         """Return units of given variable, in a predictible format."""
         units = self._dataset[varname].attrs["units"]
         replacements = {
+            "1": None,
             "kg/(s*m2)": "kg m-2 s-1",
             "kg/m2/s": "kg m-2 s-1",
         }
@@ -127,6 +128,49 @@ class GenericDatasetAccessor(ABC):
         """Convert from (x,y) to (lon,lat)."""
         f = transformer_from_crs_pyproj(self.crs_pyproj, reverse=True)
         return f(x, y)
+
+@xr.register_dataset_accessor("wizard")
+class WizardDatasetAccessor(GenericDatasetAccessor):
+
+    @property
+    def whoami(self):
+        """Guess and return the name of the model that created the output."""
+        try:
+            name = self._dataset.attrs["name"]
+        except KeyError:
+            try:
+                model = self._dataset.attrs["model"]
+            except KeyError:
+                pass
+            else:
+                if model.startswith("regional climate model MARv"):
+                    return "mar"
+        else:
+            if name == "histmth":
+                return "lmdz"
+            elif name.startswith("ismip6_"):
+                return "elmerice"
+        msg = "Existential crisis: I cannot guess which model created me."
+        raise ValueError(msg)
+
+    @property
+    def myself(self):
+        """Return reference to named accessor corresponding to self."""
+        return getattr(self._dataset, self.whoami)
+
+    @property
+    def crs_pyproj(self):
+        """Return the CRS (pyproj) corresponding to dataset."""
+        return self.myself.crs_pyproj
+
+    @property
+    def crs_cartopy(self):
+        """Return the CRS (cartopy) corresponding to dataset."""
+        return self.myself.crs_cartopy
+
+    def time_coord(self, varname):
+        """Return the name of the time coordinate associated with variable."""
+        return self.myself.time_coord(varname)
 
 @xr.register_dataset_accessor("elmerice")
 class ElmerIceDatasetAccessor(GenericDatasetAccessor):
@@ -224,3 +268,16 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
             self._dataset["x"].values[0,:],
             self._dataset["y"].values[0,:],
             self._dataset[self.meshname + "_face_nodes"].values)
+
+@xr.register_dataset_accessor("lmdz")
+class LMDzDatasetAccessor(GenericDatasetAccessor):
+
+    @property
+    def crs_pyproj(self):
+        """Return the CRS (pyproj) corresponding to the file."""
+        raise NotImplementedError("Not implemented yet.")
+
+    @property
+    def crs_cartopy(self):
+        """Return the CRS (cartopy) corresponding to the file."""
+        return cartopy.crs.PlateCarree()
