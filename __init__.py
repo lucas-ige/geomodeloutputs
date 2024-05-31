@@ -30,4 +30,4 @@ OF SUCH DAMAGE.
 
 """
 
-from . import _xarray_accessors
+from ._xarray_accessors import open_mfdataset_mar

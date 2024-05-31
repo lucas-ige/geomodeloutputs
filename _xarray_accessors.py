@@ -31,6 +31,7 @@ OF SUCH DAMAGE.
 """
 
 from abc import ABC, abstractproperty
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -38,6 +39,39 @@ import pyproj
 from matplotlib.tri import Triangulation
 import cartopy
 from ._genutils import method_cacher
+from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
+                       CF_CALENDARTYPE_360DAYS
+
+def preprocess_dataset_mar(ds):
+    """Preprocessing function to open MAR multiple-file datasets."""
+    out = ds
+    units = ds["time"].attrs["units"]
+    if units.startswith("MONTHS since "):
+        f = "%Y-%m-%d %H:%M:%S"
+        if len(units) == 18 and units.endswith(":0"):
+            units += "0"
+        start = datetime.strptime(units[13:], f)
+        try:
+            calendar = ds["time"].attrs["calendar"]
+        except KeyError:
+            calendar = CF_CALENDARTYPE_DEFAULT
+        if calendar in CF_CALENDARTYPE_360DAYS:
+            raise ValueError('This function is meant to deal with "months '
+                             'since" time data with calendars other than '
+                             '360-day calendars.')
+        convert = lambda t: datetime_plus_nmonths(start, t, calendar)
+        convert_all = np.vectorize(convert)
+        ds = ds.assign_coords(time=convert_all(ds["time"].values))
+    return ds
+
+def open_mfdataset_mar(filepath, **kwargs):
+    """Function to open MAR multiple-file datasets."""
+    if "preprocess" in kwargs:
+        msg = ('This wrapper around xarray.open_mfdataset does not accept '
+               '"preprocess" as a keyword argument.')
+        raise ValueError(msg)
+    return xr.open_mfdataset(filepath, preprocess=preprocess_dataset_mar,
+                             **kwargs)
 
 def transformer_from_crs_pyproj(crs_pyproj, reverse=False):
     """Return the transformer corresponding to given pyproj CRS.
@@ -281,3 +315,55 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
         return cartopy.crs.PlateCarree()
+
+@xr.register_dataset_accessor("mar")
+class MARDatasetAccessor(GenericDatasetAccessor):
+
+    def time_coord(self, varname):
+        """Return the name of the time coordinate associated with variable."""
+        return "time" if "time" in self._dataset[varname].dims else None
+
+    @property
+    def crs_pyproj(self):
+        """Return the CRS (pyproj) corresponding to the file."""
+        try:
+            prms = self._dataset.attrs["mapping"]
+        except KeyError:
+            prms = self._dataset.attrs["projection"]
+        else:
+            prms = prms.replace(";", ",")
+        prms = dict(s.split("=") for s in prms.split(","))
+        if prms["grid_mapping_name"] == "polar_stereographic":
+            return pyproj.CRS.from_dict(dict(
+                proj="stere", ellps=prms["ellipsoid"],
+                lat_0=float(prms["latitude_of_projection_origin"]),
+                lon_0=float(prms["straight_vertical_longitude_from_pole"]),
+                lat_ts=float(prms["standard_parallel"]),
+                x_0=float(prms["false_easting"]),
+                y_0=float(prms["false_northing"]),
+            ))
+        else:
+            raise NotImplementedError("Unsupported projection.")
+
+    @property
+    def crs_cartopy(self):
+        """Return the CRS (cartopy) corresponding to the file."""
+        try:
+            prms = self._dataset["mapping"]
+        except KeyError:
+            prms = self._dataset["projection"]
+        else:
+            prms = prms.replace(";", ",")
+        prms = dict(s.split("=") for s in prms.split(","))
+        if prms["grid_mapping_name"] == "polar_stereographic":
+            return cartopy.crs.Stereographic(
+                globe=cartopy.crs.Globe(ellipse=prms["ellipsoid"]),
+                central_latitude=float(prms["latitude_of_projection_origin"]),
+                central_longitude=float(
+                    prms["straight_vertical_longitude_from_pole"]),
+                true_scale_latitude=float(prms["standard_parallel"]),
+                false_easting=float(prms["false_easting"]),
+                false_northing=float(prms["false_northing"]),
+            )
+        else:
+            raise NotImplementedError("Unsupported projection.")
