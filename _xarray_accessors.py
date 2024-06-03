@@ -98,6 +98,7 @@ class GenericDatasetAccessor(ABC):
         """Return units of given variable, in a predictible format."""
         units = self._dataset[varname].attrs["units"]
         replacements = {
+            "-": None,
             "1": None,
             "kg/(s*m2)": "kg m-2 s-1",
             "kg/m2/s": "kg m-2 s-1",
@@ -349,9 +350,9 @@ class MARDatasetAccessor(GenericDatasetAccessor):
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
         try:
-            prms = self._dataset["mapping"]
+            prms = self._dataset.attrs["mapping"]
         except KeyError:
-            prms = self._dataset["projection"]
+            prms = self._dataset.attrs["projection"]
         else:
             prms = prms.replace(";", ",")
         prms = dict(s.split("=") for s in prms.split(","))
