@@ -64,8 +64,20 @@ def preprocess_dataset_mar(ds):
         ds = ds.assign_coords(time=convert_all(ds["time"].values))
     return ds
 
+def open_dataset_mar(filepath, **kwargs):
+    """Function to open MAR datasets.
+
+    Keyword arguments, if any, are passed to xarray.open_dataset.
+
+    """
+    return preprocess_dataset_mar(xr.open_dataset(filepath, **kwargs))
+
 def open_mfdataset_mar(filepath, **kwargs):
-    """Function to open MAR multiple-file datasets."""
+    """Function to open MAR multiple-file datasets.
+
+    Keyword arguments, if any, are passed to xarray.open_mfdataset.
+
+    """
     if "preprocess" in kwargs:
         msg = ('This wrapper around xarray.open_mfdataset does not accept '
                '"preprocess" as a keyword argument.')
