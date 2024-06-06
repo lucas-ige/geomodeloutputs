@@ -36,7 +36,6 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import xarray as xr
-from shapely.geometry import Polygon
 import pyproj
 from matplotlib.tri import Triangulation
 import cartopy
@@ -353,9 +352,9 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
         geod = pyproj.Geod(ellps="WGS84")
         out = np.full([nlat, nlon], np.nan)
         for i, j in itertools.product(range(1, nlat-1), range(1, nlon-1)):
-            poly = Polygon([(lon[j-1], lat[i-1]), (lon[j], lat[i-1]),
-                            (lon[j], lat[i]), (lon[j-1], lat[i])])
-            out[i,j] = geod.geometry_area_perimeter(poly)[0]
+            lons = (lon[j-1], lon[j], lon[j], lon[j-1])
+            lats = (lat[i-1], lat[i-1], lat[i], lat[i])
+            out[i,j] = geod.polygon_area_perimeter(lons, lats)[0]
         return out
 
 @xr.register_dataset_accessor("mar")
