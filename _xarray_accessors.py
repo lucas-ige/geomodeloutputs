@@ -31,10 +31,12 @@ OF SUCH DAMAGE.
 """
 
 from abc import ABC, abstractproperty
+import itertools
 from datetime import datetime
 import numpy as np
 import pandas as pd
 import xarray as xr
+from shapely.geometry import Polygon
 import pyproj
 from matplotlib.tri import Triangulation
 import cartopy
@@ -328,6 +330,33 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
         return cartopy.crs.PlateCarree()
+
+    @property
+    @method_cacher
+    def cell_area(self):
+        """Return an array of the areas of the grid cells.
+
+        Currently, outputs from LMDz-DYNAMICO have incorrect values for
+        extensive quantities such as grid cell areas (these values are
+        incorrect because the wrong interpolation method is used in the model).
+
+        This function calculates the correct values for the grid cell
+        areas. Note that this function does not currently calculate areas for
+        grid cells at the edge of the domain (because I am not sure how to
+        handle these cases). For these grid cells, a NAN value is used.
+
+        """
+        lon, lat = self._dataset["lon"].values, self._dataset["lat"].values
+        nlon, nlat = lon.size, lat.size
+        lonmid = (lon[1:] + lon[:-1]) / 2
+        latmid = (lat[1:] + lat[:-1]) / 2
+        geod = pyproj.Geod(ellps="WGS84")
+        out = np.full([nlat, nlon], np.nan)
+        for i, j in itertools.product(range(1, nlat-1), range(1, nlon-1)):
+            poly = Polygon([(lon[j-1], lat[i-1]), (lon[j], lat[i-1]),
+                            (lon[j], lat[i]), (lon[j-1], lat[i])])
+            out[i,j] = geod.geometry_area_perimeter(poly)[0]
+        return out
 
 @xr.register_dataset_accessor("mar")
 class MARDatasetAccessor(GenericDatasetAccessor):
