@@ -320,6 +320,8 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 @xr.register_dataset_accessor("lmdz")
 class LMDzDatasetAccessor(GenericDatasetAccessor):
 
+    surface_types = ("ter", "lic", "oce", "sic")
+
     @property
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to the file."""
