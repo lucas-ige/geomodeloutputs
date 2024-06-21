@@ -99,6 +99,13 @@ def transformer_from_crs_pyproj(crs_pyproj, reverse=False):
         fr, to = to, fr
     return pyproj.Transformer.from_crs(fr, to).transform
 
+def _unique_guess_in_iterable(guesses, iterable):
+    """Return unique guess that is found in iterable, error otherwise."""
+    found = [guess in iterable for guess in guesses]
+    if sum(found) != 1:
+        raise ValueError("Zero or more than one guess(es) is in iterable.")
+    return guesses[found.index(True)]
+
 class GenericDatasetAccessor(ABC):
 
     """Template for all other xarray dataset accessors defined below."""
@@ -107,13 +114,14 @@ class GenericDatasetAccessor(ABC):
         self._dataset = dataset
         self._cache = dict()
 
-    def units(self, varname):
+    def units_nice(self, varname):
         """Return units of given variable, in a predictible format."""
         units = self._dataset[varname].attrs["units"]
         replacements = {
             "-": None,
             "1": None,
             "kg/(s*m2)": "kg m-2 s-1",
+            "kg/(m2*s)": "kg m-2 s-1",
             "kg/m2/s": "kg m-2 s-1",
         }
         try:
@@ -122,9 +130,15 @@ class GenericDatasetAccessor(ABC):
             pass
         return units
 
+    @property
+    def time_dim(self):
+        """Return the name of the time dimension of the file."""
+        guesses = ("time_counter", "time")
+        return _unique_guess_in_iterable(guesses, self._dataset.dims)
+
     def time_coord(self, varname):
         """Return the name of the time coordinate associated with variable."""
-        dim = "time_counter"
+        dim = self.time_dim
         if dim not in self._dataset[varname].dims:
             raise ValueError("Cannot determine name of time coordinate.")
         coord = self._dataset[varname].attrs["coordinates"]
@@ -176,6 +190,14 @@ class GenericDatasetAccessor(ABC):
         """Convert from (x,y) to (lon,lat)."""
         f = transformer_from_crs_pyproj(self.crs_pyproj, reverse=True)
         return f(x, y)
+
+    def _check_dimname_guesses(self, guesses):
+        """Return name of only dimension in guesses that is found, or error."""
+        return _unique_guess_in_iterable(guesses, self._dataset.dims)
+
+    def _check_varname_guesses(self, guesses):
+        """Return name of only variable in guesses that is found, or error."""
+        return _unique_guess_in_iterable(guesses, self._dataset)
 
 @xr.register_dataset_accessor("wizard")
 class WizardDatasetAccessor(GenericDatasetAccessor):
