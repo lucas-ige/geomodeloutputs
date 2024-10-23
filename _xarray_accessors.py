@@ -287,7 +287,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
     @method_cacher
     def meshname(self):
         """Return the name of the mesh (or None if it cannot be guessed)."""
-        dims = self._dataset.dims.keys()
+        dims = self._dataset.sizes.keys()
         candidates = [d for d in dims if len(d) > 6 and
                       d.startswith("n") and d.endswith("_edge")]
         if len(candidates) != 1:
