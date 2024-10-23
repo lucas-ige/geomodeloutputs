@@ -17,11 +17,12 @@
 
 project = 'geomodeloutputs'
 copyright = ("2024-now, Institut des Géosciences de l'Environnement, "
-             "Grenoble, France")
+             "Grenoble, France. This documentation is licensed under CC BY "
+             "4.0 (https://creativecommons.org/licenses/by/4.0/)")
 author = "Institut des Géosciences de l'Environnement, Grenoble, France"
 
 # The full version, including alpha/beta/rc tags
-release = 'alpha'
+release = 'latest'
 
 # -- General configuration ---------------------------------------------------
 
@@ -44,7 +45,7 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'pyramid'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

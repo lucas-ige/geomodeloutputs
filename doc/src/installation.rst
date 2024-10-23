@@ -36,7 +36,7 @@ environment variable. If you use the Bash shell (which is the default on many GN
 
   echo "export \$PYTHONPATH=\$PYTHONPATH:~/python-packages" >> ~/.bash_profile
 
-If you use the Z shell (which is the default on modern MacOS installation):
+If you use the Z shell (which is the default on modern MacOS installations):
 
 .. code-block:: sh
 
