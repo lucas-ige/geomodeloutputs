@@ -130,6 +130,16 @@ class GenericDatasetAccessor(ABC):
             pass
         return units
 
+    def check_units(self, varname, expected, nice=True):
+        """Raise exception if units of variable are not as expected."""
+        if nice:
+            actual = self.units_nice(varname)
+        else:
+            actual = self._dataset[varname].attrs["units"]
+        if actual != expected:
+            raise ValueError('Bad units: expected "%s", got "%s"' %
+                             (expected, actual))
+
     @property
     def time_dim(self):
         """Return the name of the time dimension of the file."""
@@ -268,12 +278,19 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
     @property
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to dataset."""
-        return pyproj.CRS.from_epsg(self.epsg)
+        if self.epsg == 3031:
+            proj = ("+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 "
+                    "+x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs")
+        elif self.epsg == 3413:
+            proj = ("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 "
+                    "+x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs")
+        else:
+            raise ValueError("Unknown or unsupported EPSG: %d." % self.epsg)
+        return pyproj.CRS.from_proj4(proj)
 
     @property
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
-        # TODO make cartopy work directly with EPSG code if possible
         if self.epsg == 3031:
             return cartopy.crs.SouthPolarStereo(
                 central_longitude=0, true_scale_latitude=-71)
