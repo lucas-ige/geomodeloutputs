@@ -36,11 +36,11 @@ OF SUCH DAMAGE.
 
 Unless otherwise specified on a case by case basis, the documentation
 (reStructuredText files and corresponding output obtained by processing these
-files through Sphinx) in this repository is released under the terms of the
-Creative Commons Attribution 4.0 International license (CC BY 4.0). Here is the
-full text of the license (source:
-https://creativecommons.org/licenses/by/4.0/legalcode.txt, retrieved October
-23rd 2024):
+files through Sphinx, namely the directories docs_src and docs) in this
+repository is released under the terms of the Creative Commons Attribution 4.0
+International license (CC BY 4.0). Here is the full text of the license
+(source: https://creativecommons.org/licenses/by/4.0/legalcode.txt, retrieved
+October 23rd 2024):
 
 Attribution 4.0 International
 
