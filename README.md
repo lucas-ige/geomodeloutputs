@@ -5,6 +5,10 @@ software](https://www.gnu.org/philosophy/free-sw.html) license.
 
 NB: this is work in progress.
 
+# Documentation
+
+The documentation can be found [here](https://lucas-ige.github.io/geomodeloutputs/) -- it is also work in progress.
+
 # Copyright and licensing
 
 This material is copyright (c) 2024-now, Institut des Géosciences de l'Environnement (IGE), France. It is released
