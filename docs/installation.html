@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Installation instructions &#8212; geomodeloutputs latest documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <script src="_static/documentation_options.js?v=c6e86fd7"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Basic usage" href="basic-usage.html" />
+    <link rel="prev" title="Welcome to geomodeloutputs’s documentation!" href="index.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="basic-usage.html" title="Basic usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to geomodeloutputs’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">geomodeloutputs latest documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Installation instructions</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="installation-instructions">
+<h1>Installation instructions<a class="headerlink" href="#installation-instructions" title="Link to this heading">¶</a></h1>
+<section id="python-dependencies">
+<h2>Python dependencies<a class="headerlink" href="#python-dependencies" title="Link to this heading">¶</a></h2>
+<p>The geomodeloutputs package only works with Python 3. It imports the following third-party packages, which must
+therefore be installed:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>numpy</p></li>
+<li><p>pandas</p></li>
+<li><p>xarray</p></li>
+<li><p>pyproj</p></li>
+<li><p>matplotlib</p></li>
+<li><p>cartopy</p></li>
+</ul>
+</div></blockquote>
+<p>Any version of these packages should be fine, as long as they are not obscenely old.</p>
+</section>
+<section id="installing-the-package">
+<h2>Installing the package<a class="headerlink" href="#installing-the-package" title="Link to this heading">¶</a></h2>
+<p>To install the geomodeloutputs package, open a terminal, move to the directory where you want to install it (here we
+use <code class="code docutils literal notranslate"><span class="pre">~/python-packages</span></code> as an example), and clone the git repository:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:lucas-ige/geomodeloutputs.git<span class="w"> </span>./geomodeloutputs
+</pre></div>
+</div>
+<p>Then make sure that python will find this directory when importing packages. To do that, update the PYTHONPATH
+environment variable. If you use the Bash shell (which is the default on many GNU/Linux distributions):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;export \$PYTHONPATH=\$PYTHONPATH:~/python-packages&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bash_profile
+</pre></div>
+</div>
+<p>If you use the Z shell (which is the default on modern MacOS installations):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;export \$PYTHONPATH=\$PYTHONPATH:~/python-packages&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.zprofile
+</pre></div>
+</div>
+</section>
+<section id="testing-your-installation">
+<h2>Testing your installation<a class="headerlink" href="#testing-your-installation" title="Link to this heading">¶</a></h2>
+<p>Open a Python shell and import geomodeloutputs. If it works, you can start using it!</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Installation instructions</a><ul>
+<li><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
+<li><a class="reference internal" href="#installing-the-package">Installing the package</a></li>
+<li><a class="reference internal" href="#testing-your-installation">Testing your installation</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Welcome to geomodeloutputs’s documentation!</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="basic-usage.html"
+                          title="next chapter">Basic usage</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/installation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="basic-usage.html" title="Basic usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to geomodeloutputs’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">geomodeloutputs latest documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Installation instructions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024-now, Institut des Géosciences de l&#39;Environnement, Grenoble, France. This documentation is licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Basic usage &#8212; geomodeloutputs latest documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <script src="_static/documentation_options.js?v=c6e86fd7"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Installation instructions" href="installation.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="installation.html" title="Installation instructions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">geomodeloutputs latest documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Basic usage</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="basic-usage">
+<h1>Basic usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h1>
+<section id="let-us-look-at-an-example">
+<h2>Let us look at an example<a class="headerlink" href="#let-us-look-at-an-example" title="Link to this heading">¶</a></h2>
+<p>Imagine you ran an Elmer/Ice simulation over Greenland, and you want to make a map of the surface elevation at the end
+of the simulation (variable <code class="code docutils literal notranslate"><span class="pre">orog</span></code> in file <code class="code docutils literal notranslate"><span class="pre">output.nc</span></code>). Without geomodeloutputs, you might write a script
+like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;output.nc&quot;</span><span class="p">)</span>
+<span class="n">meshname</span> <span class="o">=</span> <span class="s2">&quot;greenland&quot;</span>
+<span class="n">tri</span> <span class="o">=</span> <span class="n">Triangulation</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,:],</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,:],</span> <span class="n">ds</span><span class="p">[</span><span class="n">meshname</span> <span class="o">+</span> <span class="s2">&quot;_face_nodes&quot;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tripcolor</span><span class="p">(</span><span class="n">tri</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;orog&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,:])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;orog.png&quot;</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In order to plot Elmer/Ice output data, which are given on an unstructured mesh, you first have to create a
+Triangulation object from three of the output’s variables: x, y, and a third variable whose name depends on the name
+that was given to the mesh when Elmer/Ice was run. To plot Elmer/Ice output data, you therefore have to:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>remember how to correctly create the Triangulation instance.</p></li>
+<li><p>know the name of the mesh, which you will probably have to hard-code in your script. Your script will therefore not
+be usable with outputs of other Elmer/Ice simulations, if they have a different mesh name.</p></li>
+</ul>
+</div></blockquote>
+<p>Using geomodeloutputs, you might write a script like this instead:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">geomodeloutputs</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;output.nc&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tripcolor</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">elmerice</span><span class="o">.</span><span class="n">triangulation</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;orog&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,:])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;orog.png&quot;</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this example, you can see that:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the NetCDF file is opened, accessed, and closed in exactly the same way as in the previous example.</p></li>
+<li><p>the details of the calculation of the Triangulation instance are now hidden.</p></li>
+<li><p>you do not need to know the name of the mesh (it is automatically detected by geomodeloutputs). Your script will
+therefore be usable “as is” with other Elmer/Ice output files.</p></li>
+</ul>
+</div></blockquote>
+<p>In fact, if you need to know it, geomodeloutputs can give you the name of the mesh:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">elmerice</span><span class="o">.</span><span class="n">meshname</span><span class="p">)</span>
+
+<span class="go">&quot;greenland&quot;</span>
+</pre></div>
+</div>
+<p>The examples above show the philosophy of geomodeloutputs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>do not change the functionality of xarray.</p></li>
+<li><p>hide uninteresting technical details and automate their calculation.</p></li>
+<li><p>make manipulating outputs from known models (Elmer/Ice, MAR, LMDz, WRF, …) more convenient.</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Basic usage</a><ul>
+<li><a class="reference internal" href="#let-us-look-at-an-example">Let us look at an example</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="installation.html"
+                          title="previous chapter">Installation instructions</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/basic-usage.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="installation.html" title="Installation instructions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">geomodeloutputs latest documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Basic usage</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024-now, Institut des Géosciences de l&#39;Environnement, Grenoble, France. This documentation is licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+  </body>
+</html>
