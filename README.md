@@ -1,5 +1,5 @@
 The geomodeloutputs Python package aims to simplify the analysis of geoscientific model output data. It is moslty
-designed to support work at the Institut des Géosciences de l'Environnement (IGE), in Grenoble, France. But it might
+designed to support my work at the Institut des Géosciences de l'Environnement (IGE), in Grenoble, France. But it might
 also be useful to you too, who knows? It is released under a [free
 software](https://www.gnu.org/philosophy/free-sw.html) license.
 
