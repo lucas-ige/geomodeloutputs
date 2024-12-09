@@ -39,7 +39,7 @@ import xarray as xr
 import pyproj
 from matplotlib.tri import Triangulation
 import cartopy
-from ._genutils import method_cacher
+from .genutils import method_cacher
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
 

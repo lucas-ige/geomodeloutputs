@@ -33,4 +33,4 @@ OF SUCH DAMAGE.
 import sys
 if sys.version_info.major != 3:
     raise RuntimeError("The geomodelouputs package only works with Python 3.")
-from ._xarray_accessors import open_dataset_mar, open_mfdataset_mar
+from .xarray_accessors import open_dataset_mar, open_mfdataset_mar
