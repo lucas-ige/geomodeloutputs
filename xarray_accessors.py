@@ -46,7 +46,7 @@ from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
 def preprocess_dataset_mar(ds):
     """Preprocessing function to open MAR multiple-file datasets."""
     out = ds
-    units = ds["time"].attrs["units"]
+    units = out["time"].attrs["units"]
     if units.startswith("MONTHS since "):
         f = "%Y-%m-%d %H:%M:%S"
         if len(units) == 18 and units.endswith(":0"):
@@ -62,8 +62,8 @@ def preprocess_dataset_mar(ds):
                              '360-day calendars.')
         convert = lambda t: datetime_plus_nmonths(start, t, calendar)
         convert_all = np.vectorize(convert)
-        ds = ds.assign_coords(time=convert_all(ds["time"].values))
-    return ds
+        out = out.assign_coords(time=convert_all(ds["time"].values))
+    return out
 
 def open_dataset_mar(filepath, **kwargs):
     """Function to open MAR datasets.
