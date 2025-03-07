@@ -45,8 +45,7 @@ from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
 
 def preprocess_dataset_mar(ds):
     """Preprocessing function to open MAR multiple-file datasets."""
-    out = ds
-    units = out["time"].attrs["units"]
+    units = ds["time"].attrs["units"]
     if units.startswith("MONTHS since "):
         f = "%Y-%m-%d %H:%M:%S"
         if len(units) == 18 and units.endswith(":0"):
@@ -62,8 +61,10 @@ def preprocess_dataset_mar(ds):
                              '360-day calendars.')
         convert = lambda t: datetime_plus_nmonths(start, t, calendar)
         convert_all = np.vectorize(convert)
-        out = out.assign_coords(time=convert_all(ds["time"].values))
-    return out
+        out = ds.assign_coords(time=convert_all(ds["time"].values))
+        return out
+    else:
+        return ds
 
 def open_dataset_mar(filepath, **kwargs):
     """Function to open MAR datasets.
@@ -397,6 +398,30 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
             lats = (lat[i-1], lat[i-1], lat[i], lat[i])
             out[i,j] = geod.polygon_area_perimeter(lons, lats)[0]
         return out
+
+    @property
+    @method_cacher
+    def grid_type(self):
+        """Return the type of grid: "reg" (lat/lon) or "ico" (dynamico)."""
+        dims = ("lon", "lat", "cell", "nvertex")
+        dims = dict((d, d in self._dataset.dims) for d in dims)
+        if (dims["lon"] and dims["lat"] and
+            not dims["cell"] and not dims["nvertex"]):
+            return "reg"
+        elif (not dims["lon"] and not dims["lat"] and
+              dims["cell"] and dims["nvertex"])
+            return "ico"
+        else:
+            raise ValueError("Cannot guess LMDz grid type.")
+
+    @property
+    def ncells(self):
+        """Return the number of cells in grid (error if not dynamico)."""
+        if self.grid_type == "ico":
+            return self._dataset.sizes["cell"]
+        else:
+            raise ValueError("Invalid grid type for this method.")
+
 
 @xr.register_dataset_accessor("mar")
 class MARDatasetAccessor(GenericDatasetAccessor):

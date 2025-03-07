@@ -40,7 +40,7 @@ def keyify_arg(arg):
         raise TypeError("I cannot keyify argument of type %s." % type(arg))
 
 def keyify_args(*args, **kwargs):
-    """Return a single key representing all given arguments."""
+    """Return a unique key representing all given arguments."""
     return (tuple(keyify_arg(a) for a in args),
             tuple((k, keyify_arg(v)) for k,v in kwargs.items()))
 
