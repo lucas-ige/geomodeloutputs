@@ -37,6 +37,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import pyproj
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 import cartopy
 from .genutils import method_cacher
@@ -409,7 +412,7 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
             not dims["cell"] and not dims["nvertex"]):
             return "reg"
         elif (not dims["lon"] and not dims["lat"] and
-              dims["cell"] and dims["nvertex"])
+              dims["cell"] and dims["nvertex"]):
             return "ico"
         else:
             raise ValueError("Cannot guess LMDz grid type.")
@@ -422,6 +425,47 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
         else:
             raise ValueError("Invalid grid type for this method.")
 
+    def plot_gridded_colors_ico(self, colors, box=None,
+                                ax=None, ec="k", lw=0.5):
+        """Plot given colors on dynamico grid as colored polygons."""
+        if isinstance(colors, str):
+            colors = [colors] * self.ncells
+        if ax is None:
+            ax = plt.gca()
+        try:
+            lon_bnds = self._dataset["lon_bnds"].values
+            lat_bnds = self._dataset["lat_bnds"].values
+        except KeyError:
+            lon_bnds = self._dataset["bounds_lon"].values
+            lat_bnds = self._dataset["bounds_lat"].values
+        if box is not None:
+            lon, lat = self._dataset["lon"].values, self._dataset["lat"].values
+            idx = (lon >= box[0]) * (lon <= box[1]) * \
+                  (lat >= box[2]) * (lat <= box[3])
+            lon_bnds, lat_bnds = lon_bnds[idx,:], lat_bnds[idx,:]
+            idx = np.array(range(self.ncells))[idx]
+        else:
+            idx = range(self.ncells)
+        transform = cartopy.crs.PlateCarree()
+        for i, idxi in enumerate(idx):
+            coords = np.array(list(zip(lon_bnds[i,:], lat_bnds[i,:])))
+            if coords[:,0].min() < -100 and coords[:,0].max() > 100:
+                # These cells are annoying to plot so we skip them (for now)
+                # TODO: fix this
+                continue
+            ax.add_patch(Polygon(coords, transform=transform,
+                                 fc=colors[idxi], ec=ec, lw=lw))
+
+    def plot_gridded_values_ico(self, values, cmap=mpl.colormaps["viridis"],
+                                vmin=None, vmax=None, box=None,
+                                ax=None, ec="k", lw=0.5):
+        """Plot given values on dynamico grid as colored polygons."""
+        if vmin is None:
+            vmin = values.min()
+        if vmax is None:
+            vmax = values.max()
+        colors = cmap(np.interp(values, [vmin, vmax], [0, 1]))
+        self.plot_gridded_colors_ico(colors, box=box, ax=ax, ec=ec, lw=lw)
 
 @xr.register_dataset_accessor("mar")
 class MARDatasetAccessor(GenericDatasetAccessor):
