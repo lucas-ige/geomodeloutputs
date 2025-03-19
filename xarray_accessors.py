@@ -1,36 +1,34 @@
-"""Module geomodeloutputs: easily use files that are geoscience model outputs.
+# Copyright (2024-now) Institut des Géosciences de l'Environnement, France.
+#
+# This software is released under the terms of the BSD 3-clause license:
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#     (1) Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#
+#     (2) Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#
+#     (3) The name of the author may not be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Copyright (2024-now) Institut des Géosciences de l'Environnement (IGE), France.
+"""Module geomodeloutputs: simplify your use of geoscience model outputs."""
 
-This software is released under the terms of the BSD 3-clause license:
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    (1) Redistributions of source code must retain the above copyright notice,
-    this list of conditions and the following disclaimer.
-
-    (2) Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
-
-    (3) The name of the author may not be used to endorse or promote products
-    derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-OF SUCH DAMAGE.
-
-"""
-
-from abc import ABC, abstractmethod
+from abc import ABC
 import itertools
 from datetime import datetime
 import numpy as np
@@ -118,8 +116,24 @@ class GenericDatasetAccessor(ABC):
         self._dataset = dataset
         self._cache = dict()
 
-    def units_nice(self, varname: str) -> str:
-        """Return units of given variable, in a predictible format."""
+    def units_nice(self, varname: str) -> str or None:
+        """Return units of given variable, in a predictible format.
+
+        Predictable format:
+
+         - uses single spaces to separate the dimensions in the units
+
+         - uses negative exponents instead of division symbols
+
+         - always orders dimensions in this order: mass, length, time
+
+         - never uses parentheses
+
+        :param varname: the name of the variable in the NetCDF file.
+
+        :returns: the formatted units (or None for dimensionless variables).
+
+        """
         units = self._dataset[varname].attrs["units"]
         replacements = {
             "-": None,
@@ -134,13 +148,9 @@ class GenericDatasetAccessor(ABC):
             pass
         return units
 
-    def check_units(
-            self,
-            varname: str,
-            expected: str,
-            nice: bool = True
-    ) -> None:
-        """Raise exception if units of variable are not as expected."""
+    def check_units(self, varname: str, expected: str,
+                    nice: bool = True) -> None:
+        """Raise ValueError if units of variable are not as expected."""
         if nice:
             actual = self.units_nice(varname)
         else:
@@ -167,7 +177,6 @@ class GenericDatasetAccessor(ABC):
             coord = "time" + coord
         return coord
 
-
     def times(self, varname: str, dtype: str = "datetime"):
         """Return array of times corresponding to given variable.
 
@@ -192,16 +201,14 @@ class GenericDatasetAccessor(ABC):
         return values
 
     @property
-    @abstractmethod
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to dataset."""
-        pass
+        raise NotImplementedError("Not implemented for this case.")
 
     @property
-    @abstractmethod
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to dataset."""
-        pass
+        raise NotImplementedError("Not implemented for this case.")
 
     def ll2xy(self, lon, lat):
         """Convert from (lon,lat) to (x,y)."""

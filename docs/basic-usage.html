@@ -13,6 +13,7 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Shared functionality" href="accessor_commons.html" />
     <link rel="prev" title="Installation instructions" href="installation.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -28,6 +29,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="accessor_commons.html" title="Shared functionality"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="installation.html" title="Installation instructions"
              accesskey="P">previous</a> |</li>
@@ -104,6 +108,23 @@ therefore be usable “as is” with other Elmer/Ice output files.</p></li>
 </ul>
 </div></blockquote>
 </section>
+<section id="the-general-philosophy-of-geomodeloutputs">
+<h2>The general philosophy of geomodeloutputs<a class="headerlink" href="#the-general-philosophy-of-geomodeloutputs" title="Link to this heading">¶</a></h2>
+<p>The general philosophy of geomodeloutputs is to add functionality to NetCDF files opened as <code class="code docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>
+instances, without changing how xarray works.</p>
+<p>The functionality added by geomodeloutputs can be accessed through new attributes of Dataset instances. There is one
+such new attribute for each model supported by geomodeloutputs. Think of these attributes as drawers: one drawer for
+each model. These drawers are actually called “accessors” in xarray jargon.</p>
+<p>For example, the added functionality for Elmer/Ice outputs can be accessed via <code class="code docutils literal notranslate"><span class="pre">ds.elmerice.*</span></code>, and the added
+functionality for LMDz outputs can be accessed via <code class="code docutils literal notranslate"><span class="pre">ds.lmdz.*</span></code>.</p>
+</section>
+<section id="the-wizard">
+<h2>The wizard<a class="headerlink" href="#the-wizard" title="Link to this heading">¶</a></h2>
+<p>Sometimes one wants to write code that is model-agnostic (ie. code that works transparently with outputs of different
+models). For that, geomodeloutputs provides the <code class="code docutils literal notranslate"><span class="pre">wizard</span></code> accessor that works for all relevant models. For
+example, <code class="code docutils literal notranslate"><span class="pre">ds.wizard.units_nice</span></code> correspond to <code class="code docutils literal notranslate"><span class="pre">ds.elmerice.units_nice</span></code> for Elmer/Ice outputs and to
+<code class="code docutils literal notranslate"><span class="pre">ds.lmdz.units_nice</span></code> for LMDz outputs.</p>
+</section>
 </section>
 
 
@@ -118,6 +139,8 @@ therefore be usable “as is” with other Elmer/Ice output files.</p></li>
     <ul>
 <li><a class="reference internal" href="#">Basic usage</a><ul>
 <li><a class="reference internal" href="#let-us-look-at-an-example">Let us look at an example</a></li>
+<li><a class="reference internal" href="#the-general-philosophy-of-geomodeloutputs">The general philosophy of geomodeloutputs</a></li>
+<li><a class="reference internal" href="#the-wizard">The wizard</a></li>
 </ul>
 </li>
 </ul>
@@ -127,6 +150,11 @@ therefore be usable “as is” with other Elmer/Ice output files.</p></li>
     <h4>Previous topic</h4>
     <p class="topless"><a href="installation.html"
                           title="previous chapter">Installation instructions</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="accessor_commons.html"
+                          title="next chapter">Shared functionality</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -155,6 +183,9 @@ therefore be usable “as is” with other Elmer/Ice output files.</p></li>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="accessor_commons.html" title="Shared functionality"
+             >next</a> |</li>
         <li class="right" >
           <a href="installation.html" title="Installation instructions"
              >previous</a> |</li>

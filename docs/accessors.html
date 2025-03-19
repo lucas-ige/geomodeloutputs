@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The accessors &#8212; geomodeloutputs latest documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <script src="_static/documentation_options.js?v=c6e86fd7"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Basic usage" href="basic-usage.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="basic-usage.html" title="Basic usage"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">geomodeloutputs latest documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The accessors</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="the-accessors">
+<h1>The accessors<a class="headerlink" href="#the-accessors" title="Link to this heading">¶</a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="geomodeloutputs.xarray_accessors.GenericDatasetAccessor.units_nice">
+<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">units_nice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#geomodeloutputs.xarray_accessors.GenericDatasetAccessor.units_nice" title="Link to this definition">¶</a></dt>
+<dd><p>Return units of given variable, in a predictible format.</p>
+<p>Predictable format:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>uses single spaces to separate the dimensions in the units</p></li>
+<li><p>uses negative exponents instead of division symbols</p></li>
+<li><p>always orders dimensions in this order: mass, length, time</p></li>
+<li><p>never uses parentheses</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>varname</strong> (<em>str</em>) – the name of the variable in the NetCDF file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the formatted units (or None for dimensionless variables).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">crs_cartopy</span></span></dt>
+<dd><p>Return the CRS (cartopy) corresponding to dataset.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">The accessors</a><ul>
+<li><a class="reference internal" href="#geomodeloutputs.xarray_accessors.GenericDatasetAccessor.units_nice"><code class="docutils literal notranslate"><span class="pre">GenericDatasetAccessor.units_nice()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="basic-usage.html"
+                          title="previous chapter">Basic usage</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/accessors.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="basic-usage.html" title="Basic usage"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">geomodeloutputs latest documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">The accessors</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024-now, Institut des Géosciences de l&#39;Environnement, Grenoble, France. This documentation is licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+  </body>
+</html>
