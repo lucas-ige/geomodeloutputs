@@ -43,7 +43,7 @@ CF_CALENDARTYPE_ALL = (CF_CALENDARTYPE_GREGORIAN +
                        CF_CALENDARTYPE_360DAYS)
 CF_CALENDARTYPE_DEFAULT = "gregorian"
 
-def ndays_in_year(year, calendar=CF_CALENDARTYPE_DEFAULT):
+def ndays_in_year(year: int, calendar: str = CF_CALENDARTYPE_DEFAULT) -> int:
     """Return number of days in given year according to given calendar."""
     if calendar in CF_CALENDARTYPE_NOLEAP:
         return 365
@@ -55,7 +55,11 @@ def ndays_in_year(year, calendar=CF_CALENDARTYPE_DEFAULT):
         return int(datetime(year, 12, 31).strftime("%j"))
     raise ValueError("Invalid calendar value: %s." % calendar)
 
-def ndays_in_month(year, month, calendar=CF_CALENDARTYPE_DEFAULT):
+def ndays_in_month(
+        year: int,
+        month: int,
+        calendar: str = CF_CALENDARTYPE_DEFAULT
+) -> int:
     """Return number of days in given month according to given calendar."""
     if calendar not in CF_CALENDARTYPE_ALL:
         raise ValueError("Invalid calendar value: %s." % calendar)
@@ -72,7 +76,11 @@ def ndays_in_month(year, month, calendar=CF_CALENDARTYPE_DEFAULT):
             month = 1
         return (datetime(year, month, 1) - timedelta(days=1)).day
 
-def datetime_plus_nmonths(start, nmonths, calendar=CF_CALENDARTYPE_DEFAULT):
+def datetime_plus_nmonths(
+        start: datetime,
+        nmonths: int,
+        calendar: str = CF_CALENDARTYPE_DEFAULT
+) -> datetime:
     """Return (start+nmonths)."""
     if calendar not in CF_CALENDARTYPE_GREGORIAN:
         raise NotImplementedError("This calendar is not yet supported.")

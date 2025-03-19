@@ -46,7 +46,7 @@ from .genutils import method_cacher
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
 
-def preprocess_dataset_mar(ds):
+def preprocess_dataset_mar(ds: xr.Dataset) -> xr.Dataset:
     """Preprocessing function to open MAR multiple-file datasets."""
     units = ds["time"].attrs["units"]
     if units.startswith("MONTHS since "):
@@ -69,7 +69,7 @@ def preprocess_dataset_mar(ds):
     else:
         return ds
 
-def open_dataset_mar(filepath, **kwargs):
+def open_dataset_mar(filepath: str, **kwargs) -> xr.Dataset:
     """Function to open MAR datasets.
 
     Keyword arguments, if any, are passed to xarray.open_dataset.
@@ -114,11 +114,11 @@ class GenericDatasetAccessor(ABC):
 
     """Template for all other xarray dataset accessors defined below."""
 
-    def __init__(self, dataset):
+    def __init__(self, dataset : xr.Dataset) -> None:
         self._dataset = dataset
         self._cache = dict()
 
-    def units_nice(self, varname):
+    def units_nice(self, varname: str) -> str:
         """Return units of given variable, in a predictible format."""
         units = self._dataset[varname].attrs["units"]
         replacements = {
@@ -134,7 +134,12 @@ class GenericDatasetAccessor(ABC):
             pass
         return units
 
-    def check_units(self, varname, expected, nice=True):
+    def check_units(
+            self,
+            varname: str,
+            expected: str,
+            nice: bool = True
+    ) -> None:
         """Raise exception if units of variable are not as expected."""
         if nice:
             actual = self.units_nice(varname)
@@ -145,12 +150,12 @@ class GenericDatasetAccessor(ABC):
                              (expected, actual))
 
     @property
-    def time_dim(self):
+    def time_dim(self) -> str:
         """Return the name of the time dimension of the file."""
         guesses = ("time_counter", "time")
         return _unique_guess_in_iterable(guesses, self._dataset.dims)
 
-    def time_coord(self, varname):
+    def time_coord(self, varname: str) -> str:
         """Return the name of the time coordinate associated with variable."""
         dim = self.time_dim
         if dim not in self._dataset[varname].dims:
@@ -162,7 +167,8 @@ class GenericDatasetAccessor(ABC):
             coord = "time" + coord
         return coord
 
-    def times(self, varname, dtype="datetime"):
+
+    def times(self, varname: str, dtype: str = "datetime"):
         """Return array of times corresponding to given variable.
 
         Parameter "dtype" indicates which format will be used for the date
