@@ -30,7 +30,7 @@ OF SUCH DAMAGE.
 
 """
 
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 import itertools
 from datetime import datetime
 import numpy as np
@@ -42,7 +42,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 import cartopy
-from .genutils import method_cacher
+from ._genutils import method_cacher
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
 
@@ -191,12 +191,14 @@ class GenericDatasetAccessor(ABC):
             raise ValueError("Invalid dtype: %s." % dtype)
         return values
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to dataset."""
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to dataset."""
         pass
