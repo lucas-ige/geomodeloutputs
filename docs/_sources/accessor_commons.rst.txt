@@ -2,6 +2,15 @@
    Copyright (c) 2025-now, Institut des Géosciences de l'Environnement, France.
    License: CC BY 4.0
 
+Utility functions
+##################
+
+.. autofunction:: geomodeloutputs.xarray_accessors.open_dataset
+    :no-index:
+
+.. autofunction:: geomodeloutputs.xarray_accessors.open_mfdataset
+    :no-index:
+
 Shared functionality
 ####################
 

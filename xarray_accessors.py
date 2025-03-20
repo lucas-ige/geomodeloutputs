@@ -44,8 +44,14 @@ from ._genutils import method_cacher
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
 
-def preprocess_dataset_mar(ds: xr.Dataset) -> xr.Dataset:
-    """Preprocessing function to open MAR multiple-file datasets."""
+def _preprocess_dataset(ds: xr.Dataset) -> xr.Dataset:
+    """Preprocessing function to open non CF-compliant datasets.
+
+    :param ds: the dataset opened with vanilla xarray.open_dataset.
+
+    :returns: the processed dataset.
+
+    """
     units = ds["time"].attrs["units"]
     if units.startswith("MONTHS since "):
         f = "%Y-%m-%d %H:%M:%S"
@@ -67,25 +73,43 @@ def preprocess_dataset_mar(ds: xr.Dataset) -> xr.Dataset:
     else:
         return ds
 
-def open_dataset_mar(filepath: str, **kwargs) -> xr.Dataset:
-    """Function to open MAR datasets.
+def open_dataset(filepath: str, **kwargs) -> xr.Dataset:
+    """Open dataset.
 
-    Keyword arguments, if any, are passed to xarray.open_dataset.
+    This function acts as xarray.open_dataset, except that it can handle files
+    that have non CF-compliant time units, such as "months since ...".
+
+    :param filepath: location of the file on disk.
+
+    :param \\*\\*kwargs: additional keyword arguments, if any, are passed "as
+        is" to xarray.open_dataset.
+
+    :returns: the opened dataset.
 
     """
-    return preprocess_dataset_mar(xr.open_dataset(filepath, **kwargs))
+    return _preprocess_dataset(xr.open_dataset(filepath, **kwargs))
 
-def open_mfdataset_mar(filepath, **kwargs):
-    """Function to open MAR multiple-file datasets.
+def open_mfdataset(filepath: str, **kwargs) -> xr.Dataset:
+    """Open multiple-file dataset.
 
-    Keyword arguments, if any, are passed to xarray.open_mfdataset.
+    This function acts as xarray.open_mfdataset, except that it can handle
+    files that have non CF-compliant time units, such as "months since ...".
+
+    :param filepath: location of the file(s) on disk. It can be any pattern
+        accepted by xarray.open_mfdataset.
+
+    :param \\*\\*kwargs: additional keyword arguments, if any, are passed "as
+        is" to xarray.open_dataset, with one exception: named argument
+        "preprocess" is not allowed here.
+
+    :returns: the opened dataset.
 
     """
     if "preprocess" in kwargs:
         msg = ('This wrapper around xarray.open_mfdataset does not accept '
                '"preprocess" as a keyword argument.')
         raise ValueError(msg)
-    return xr.open_mfdataset(filepath, preprocess=preprocess_dataset_mar,
+    return xr.open_mfdataset(filepath, preprocess=_preprocess_dataset,
                              **kwargs)
 
 def transformer_from_crs_pyproj(crs_pyproj, reverse=False):
@@ -202,12 +226,12 @@ class GenericDatasetAccessor(ABC):
 
     @property
     def crs_pyproj(self):
-        """Return the CRS (pyproj) corresponding to dataset."""
+        """The CRS (pyproj) corresponding to dataset."""
         raise NotImplementedError("Not implemented for this case.")
 
     @property
     def crs_cartopy(self):
-        """Return the CRS (cartopy) corresponding to dataset."""
+        """The CRS (cartopy) corresponding to dataset."""
         raise NotImplementedError("Not implemented for this case.")
 
     def ll2xy(self, lon, lat):
