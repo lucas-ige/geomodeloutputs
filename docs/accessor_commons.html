@@ -94,8 +94,7 @@ is” to xarray.open_dataset, with one exception: named argument
 </section>
 <section id="shared-functionality">
 <h1>Shared functionality<a class="headerlink" href="#shared-functionality" title="Link to this heading">¶</a></h1>
-<p>Some functionality is implemented for all models. For example, the method <code class="code docutils literal notranslate"><span class="pre">units_nice</span></code> is common to all models,
-so you can use, <code class="code docutils literal notranslate"><span class="pre">ds.lmdz.units_nice</span></code>, <code class="code docutils literal notranslate"><span class="pre">ds.elmerice.units_nice</span></code>, and of course <code class="code docutils literal notranslate"><span class="pre">ds.wizard.units_nice</span></code>.</p>
+<p>Some functionality is implemented for all models. For example, the method <code class="code docutils literal notranslate"><span class="pre">units_nice</span></code> is common to all models, so you can use, <code class="code docutils literal notranslate"><span class="pre">ds.lmdz.units_nice</span></code>, <code class="code docutils literal notranslate"><span class="pre">ds.elmerice.units_nice</span></code>, and of course <code class="code docutils literal notranslate"><span class="pre">ds.wizard.units_nice</span></code>.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">units_nice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varname</span></span></em><span class="sig-paren">)</span></dt>
@@ -134,6 +133,68 @@ so you can use, <code class="code docutils literal notranslate"><span class="pre
 <dd><p>The CRS (cartopy) corresponding to dataset.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">varnames_lonlat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em></dt>
+<dd><p>The names of the longitude and latitude variables.</p>
+</dd></dl>
+
+</section>
+<section id="shared-functionality-ugrid">
+<h1>Shared functionality (ugrid)<a class="headerlink" href="#shared-functionality-ugrid" title="Link to this heading">¶</a></h1>
+<p>This section describes functionality that is implemented for all model outputs that are based on unstructured grids.</p>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">varnames_lonlat_bounds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em></dt>
+<dd><p>The names of the lon/lat bound variables.</p>
+<p>This property only makes sense for unstructured grids. For these grids,
+the bound variables are arrays of shape (n_cells, n_vertices) that
+contain the coordinates of the vertices of each cell.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">colors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Plot given colors as colored polygons on unstructured grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>colors</strong> (<em>Iterable</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>str</em><em> | </em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>tuple</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>str</em><em>, </em><em>float</em><em>] </em><em>| </em><em>tuple</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>float</em><em>]</em><em>]</em>) – the face colors of the polygons. There must be exactly
+as many colors as there are cells in the grid.</p></li>
+<li><p><strong>box</strong> (<em>tuple</em><em>[</em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>, </em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>, </em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>, </em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>] </em><em>| </em><em>None</em>) – the longitude and latitude limits of the interesting part
+of the data, in the format (lon_min, lon_max, lat_min, lat_max).
+Grid cells outside of this range will not be plotted.</p></li>
+<li><p><strong>ax</strong> (<em>Axes</em><em> | </em><em>None</em>) – the Matplotlib axis object onto which to draw the data.</p></li>
+<li><p><strong>**kwargs</strong> – these are passed to Matplotlib’s Polygon.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap=&lt;matplotlib.colors.ListedColormap</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Plot given values as colored polygons on unstructured grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<em>Iterable</em><em>[</em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>]</em>) – the values to be plotted. There must be exactly as many
+values as there are grids in the cell.</p></li>
+<li><p><strong>cmap</strong> – the colormap to use.</p></li>
+<li><p><strong>vmin</strong> (<em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em> | </em><em>None</em>) – the minimum value to show on the color scale.</p></li>
+<li><p><strong>vmax</strong> (<em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em> | </em><em>None</em>) – the maximum value to show on the color scale.</p></li>
+<li><p><strong>**kwargs</strong> – these are passed to self.plot_ugridded_colors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -148,6 +209,7 @@ so you can use, <code class="code docutils literal notranslate"><span class="pre
     <ul>
 <li><a class="reference internal" href="#">Utility functions</a></li>
 <li><a class="reference internal" href="#shared-functionality">Shared functionality</a></li>
+<li><a class="reference internal" href="#shared-functionality-ugrid">Shared functionality (ugrid)</a></li>
 </ul>
 
   </div>

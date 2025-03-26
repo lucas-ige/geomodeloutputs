@@ -26,9 +26,10 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Module geomodeloutputs: simplify your use of geoscience model outputs."""
+"""Module geomodeloutputs: accessors to add functionality to datasets."""
 
 from abc import ABC
+from typing import Iterable
 import itertools
 from datetime import datetime
 import numpy as np
@@ -40,6 +41,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 import cartopy
+from ._typing import NumType, ColorType
 from ._genutils import method_cacher
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
@@ -244,13 +246,133 @@ class GenericDatasetAccessor(ABC):
         f = transformer_from_crs_pyproj(self.crs_pyproj, reverse=True)
         return f(x, y)
 
-    def _check_dimname_guesses(self, guesses):
+    def _guess_dimname(self, guesses):
         """Return name of only dimension in guesses that is found, or error."""
         return _unique_guess_in_iterable(guesses, self._dataset.dims)
 
-    def _check_varname_guesses(self, guesses):
+    def _guess_varname(self, guesses):
         """Return name of only variable in guesses that is found, or error."""
         return _unique_guess_in_iterable(guesses, self._dataset)
+
+    @property
+    def dimname_ncells(self) -> str:
+        """The name of the dimensions for the number of grid cells.
+
+        This property makes sense for unstructured grids only.
+
+        """
+        return self._guess_dimname(["cells", "cell_mesh"])
+
+    @property
+    def ncells(self) -> int:
+        """The number of cells in the grid.
+
+        This property makes sense for unstructured grids only.
+
+        """
+        return self._dataset.sizes[self.dimname_ncells]
+
+    @property
+    @method_cacher
+    def varnames_lonlat(self) -> tuple[str, str]:
+        """The names of the longitude and latitude variables."""
+        guesses_lon = ["lon", "lon_mesh"]
+        lon_name = self._guess_varname(guesses_lon)
+        guesses_lat = [s.replace("lon", "lat") for s in guesses_lon]
+        lat_name = self._guess_varname(guesses_lat)
+        if guesses_lon.index(lon_name) != guesses_lat.index(lat_name):
+            raise ValueError("Inconsistent lon/lat variable names.")
+        return lon_name, lat_name
+
+    @property
+    @method_cacher
+    def varnames_lonlat_bounds(self) -> tuple[str, str]:
+        """The names of the lon/lat bound variables.
+
+        This property only makes sense for unstructured grids. For these grids,
+        the bound variables are arrays of shape (n_cells, n_vertices) that
+        contain the coordinates of the vertices of each cell.
+
+        """
+        guesses_lon = ["lon_bnds", "bounds_lon", "lon_mesh_bnds"]
+        lon_name = self._guess_varname(guesses_lon)
+        guesses_lat = [s.replace("lon", "lat") for s in guesses_lon]
+        lat_name = self._guess_varname(guesses_lat)
+        if guesses_lon.index(lon_name) != guesses_lat.index(lat_name):
+            raise ValueError("Inconsistent lon/lat bound variable names.")
+        return lon_name, lat_name
+
+    def plot_ugridded_colors(
+            self,
+            colors: Iterable[ColorType],
+            box: tuple[NumType, NumType, NumType, NumType] | None = None,
+            ax: mpl.axes.Axes | None = None,
+            **kwargs
+        ) -> None:
+        """Plot given colors as colored polygons on unstructured grid.
+
+        :param colors: the face colors of the polygons. There must be exactly
+            as many colors as there are cells in the grid.
+
+        :param box: the longitude and latitude limits of the interesting part
+            of the data, in the format (lon_min, lon_max, lat_min, lat_max).
+            Grid cells outside of this range will not be plotted.
+
+        :param ax: the Matplotlib axis object onto which to draw the data.
+
+        :param \\*\\*kwargs: these are passed to Matplotlib's Polygon.
+
+        """
+        if ax is None:
+            ax = plt.gca()
+        lon_bnds = self._dataset[self.varnames_lonlat_bounds[0]].values
+        lat_bnds = self._dataset[self.varnames_lonlat_bounds[1]].values
+        if box is not None:
+            lon = self._dataset[self.varnames_lonlat[0]].values
+            lat = self._dataset[self.varnames_lonlat[1]].values
+            idx = (lon >= box[0]) * (lon <= box[1]) * \
+                  (lat >= box[2]) * (lat <= box[3])
+            idx = np.array(range(self.ncells))[idx]
+        else:
+            idx = range(self.ncells)
+        transform = cartopy.crs.PlateCarree()
+        for i in idx:
+            coords = np.array(list(zip(lon_bnds[i,:], lat_bnds[i,:])))
+            if coords[:,0].min() < -100 and coords[:,0].max() > 100:
+                # These cells are annoying to plot so we skip them (for now)
+                # TODO: fix this
+                continue
+            ax.add_patch(Polygon(coords, transform=transform,
+                                 fc=colors[i], **kwargs))
+
+    def plot_ugridded_values(
+            self,
+            values: Iterable[NumType],
+            cmap=mpl.colormaps["viridis"], #TODO: needs a type hint
+            vmin: NumType | None = None,
+            vmax: NumType | None = None,
+            **kwargs,
+        ) -> None:
+        """Plot given values as colored polygons on unstructured grid.
+
+        :param values: the values to be plotted. There must be exactly as many
+            values as there are grids in the cell.
+
+        :param cmap: the colormap to use.
+
+        :param vmin: the minimum value to show on the color scale.
+
+        :param vmax: the maximum value to show on the color scale.
+
+        :param \\*\\*kwargs: these are passed to self.plot_ugridded_colors.
+
+        """
+        if vmin is None:
+            vmin = values.min()
+        if vmax is None:
+            vmax = values.max()
+        colors = cmap(np.interp(values, [vmin, vmax], [0, 1]))
+        self.plot_ugridded_colors(colors, **kwargs)
 
 @xr.register_dataset_accessor("wizard")
 class WizardDatasetAccessor(GenericDatasetAccessor):
@@ -399,6 +521,44 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
             self._dataset["y"].values[0,:],
             self._dataset[self.meshname + "_face_nodes"].values)
 
+    @property
+    @method_cacher
+    def map_face_node(self) -> np.typing.NDArray:
+        """An array giving, for each face, the indices of its vertices.
+
+        The indices are given in Python convention (ie. starting at 0).
+
+        """
+        n_faces = self._dataset.sizes[self.dimname_face]
+        n_vertices = self._dataset.sizes[self.dimname_vertex]
+        varname = self.meshname + "_face_nodes"
+        out = np.array(self._dataset[varname].values)
+        if out.shape != (n_faces, n_vertices):
+            raise ValueError("Map array has invalid shape.")
+        start_index = int(self._dataset[varname].start_index)
+        if start_index > 0:
+            out -= start_index
+        elif start_index != 0:
+            raise ValueError("Negative start index.")
+        return out
+
+    def node2face(self, values : Iterable) -> np.typing.NDArray:
+        """Convert given node values to face values.
+
+        :param values: the array of node values to convert.
+
+        :returns: the corresponding array of face values.
+
+        """
+        if len(values) != self._dataset.sizes[self.dimname_node]:
+            raise ValueError("Bad length for input.")
+        map_ = self.map_face_node
+        out = np.zeros(map_.shape[0])
+        for i in range(len(out)):
+            nodevals = [values[v] for v in map_[i,:]]
+            out[i] = sum(nodevals) / len(nodevals)
+        return out
+
 @xr.register_dataset_accessor("lmdz")
 class LMDzDatasetAccessor(GenericDatasetAccessor):
 
@@ -455,56 +615,6 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
             return "ico"
         else:
             raise ValueError("Cannot guess LMDz grid type.")
-
-    @property
-    def ncells(self):
-        """Return the number of cells in grid (error if not dynamico)."""
-        if self.grid_type == "ico":
-            return self._dataset.sizes["cell"]
-        else:
-            raise ValueError("Invalid grid type for this method.")
-
-    def plot_gridded_colors_ico(self, colors, box=None,
-                                ax=None, ec="k", lw=0.5):
-        """Plot given colors on dynamico grid as colored polygons."""
-        if isinstance(colors, str):
-            colors = [colors] * self.ncells
-        if ax is None:
-            ax = plt.gca()
-        try:
-            lon_bnds = self._dataset["lon_bnds"].values
-            lat_bnds = self._dataset["lat_bnds"].values
-        except KeyError:
-            lon_bnds = self._dataset["bounds_lon"].values
-            lat_bnds = self._dataset["bounds_lat"].values
-        if box is not None:
-            lon, lat = self._dataset["lon"].values, self._dataset["lat"].values
-            idx = (lon >= box[0]) * (lon <= box[1]) * \
-                  (lat >= box[2]) * (lat <= box[3])
-            lon_bnds, lat_bnds = lon_bnds[idx,:], lat_bnds[idx,:]
-            idx = np.array(range(self.ncells))[idx]
-        else:
-            idx = range(self.ncells)
-        transform = cartopy.crs.PlateCarree()
-        for i, idxi in enumerate(idx):
-            coords = np.array(list(zip(lon_bnds[i,:], lat_bnds[i,:])))
-            if coords[:,0].min() < -100 and coords[:,0].max() > 100:
-                # These cells are annoying to plot so we skip them (for now)
-                # TODO: fix this
-                continue
-            ax.add_patch(Polygon(coords, transform=transform,
-                                 fc=colors[idxi], ec=ec, lw=lw))
-
-    def plot_gridded_values_ico(self, values, cmap=mpl.colormaps["viridis"],
-                                vmin=None, vmax=None, box=None,
-                                ax=None, ec="k", lw=0.5):
-        """Plot given values on dynamico grid as colored polygons."""
-        if vmin is None:
-            vmin = values.min()
-        if vmax is None:
-            vmax = values.max()
-        colors = cmap(np.interp(values, [vmin, vmax], [0, 1]))
-        self.plot_gridded_colors_ico(colors, box=box, ax=ax, ec=ec, lw=lw)
 
 @xr.register_dataset_accessor("mar")
 class MARDatasetAccessor(GenericDatasetAccessor):
