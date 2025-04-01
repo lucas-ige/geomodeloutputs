@@ -28,9 +28,13 @@
 
 """Module geomodeloutputs: custom types or shortcut to existing types."""
 
-from typing import TypeAlias
+from typing import TypeAlias, Literal
+from datetime import datetime
 import numpy as np
+import pandas as pd
 import matplotlib.typing as mpl_typing
 
 NumType: TypeAlias = int | float | np.number
 ColorType: TypeAlias = mpl_typing.ColorType
+DateTypeStr: TypeAlias = Literal["datetime", "pandas", "numpy", "xarray"]
+DateType: TypeAlias = datetime | pd.Timestamp | np.datetime64 # TODO add type hint for xarray timestamps. Are they cftimes ?

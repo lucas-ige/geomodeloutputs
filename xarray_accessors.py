@@ -33,6 +33,7 @@ from typing import Iterable
 import itertools
 from datetime import datetime
 import numpy as np
+from numpy.typing import NDArray
 import pandas as pd
 import xarray as xr
 import pyproj
@@ -41,7 +42,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 import cartopy
-from ._typing import NumType, ColorType
+from ._typing import NumType, ColorType, DateTypeStr, DateType
 from ._genutils import method_cacher
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
@@ -49,9 +50,14 @@ from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
 def _preprocess_dataset(ds: xr.Dataset) -> xr.Dataset:
     """Preprocessing function to open non CF-compliant datasets.
 
-    :param ds: the dataset opened with vanilla xarray.open_dataset.
+    Parameters
+    ----------
+    ds
+        The dataset opened with vanilla xarray.open_dataset.
 
-    :returns: the processed dataset.
+    Returns
+    -------
+        The processed dataset.
 
     """
     units = ds["time"].attrs["units"]
@@ -81,12 +87,16 @@ def open_dataset(filepath: str, **kwargs) -> xr.Dataset:
     This function acts as xarray.open_dataset, except that it can handle files
     that have non CF-compliant time units, such as "months since ...".
 
-    :param filepath: location of the file on disk.
+    Parameters
+    ----------
+    filepath
+        The location of the file on disk.
+    **kwargs
+        These are passed "as is" to xarray.open_dataset.
 
-    :param \\*\\*kwargs: additional keyword arguments, if any, are passed "as
-        is" to xarray.open_dataset.
-
-    :returns: the opened dataset.
+    Returns
+    -------
+        The opened dataset.
 
     """
     return _preprocess_dataset(xr.open_dataset(filepath, **kwargs))
@@ -97,14 +107,23 @@ def open_mfdataset(filepath: str, **kwargs) -> xr.Dataset:
     This function acts as xarray.open_mfdataset, except that it can handle
     files that have non CF-compliant time units, such as "months since ...".
 
-    :param filepath: location of the file(s) on disk. It can be any pattern
-        accepted by xarray.open_mfdataset.
+    Parameters
+    ----------
+    filepath
+        The location of the file(s) on disk. It can be any pattern accepted by
+        xarray.open_mfdataset.
+    **kwargs
+        These are passed "as is" to xarray.open_dataset, with one exception:
+        named argument "preprocess" is not allowed here.
 
-    :param \\*\\*kwargs: additional keyword arguments, if any, are passed "as
-        is" to xarray.open_dataset, with one exception: named argument
-        "preprocess" is not allowed here.
+    Returns
+    -------
+        The opened dataset.
 
-    :returns: the opened dataset.
+    Raises
+    ------
+    ValueError
+        If "preprocess" is present as a named argument.
 
     """
     if "preprocess" in kwargs:
@@ -125,7 +144,7 @@ def transformer_from_crs_pyproj(crs_pyproj, reverse=False):
     to = crs_pyproj
     if reverse:
         fr, to = to, fr
-    return pyproj.Transformer.from_crs(fr, to).transform
+    return pyproj.Transformer.from_crs(fr, to, always_xy=True).transform
 
 def _unique_guess_in_iterable(guesses, iterable):
     """Return unique guess that is found in iterable, error otherwise."""
@@ -142,7 +161,25 @@ class GenericDatasetAccessor(ABC):
         self._dataset = dataset
         self._cache = dict()
 
-    def units_nice(self, varname: str) -> str or None:
+    def __getitem__(self, *args, **kwargs):
+        return self._dataset.__getitem__(*args, **kwargs)
+
+    @property
+    def dims(self):
+        return self._dataset.dims
+
+    @property
+    def sizes(self):
+        return self._dataset.sizes
+
+    @property
+    def attrs(self):
+        return self._dataset.attrs
+
+    def close(self, *args, **kwargs):
+        return self._dataset.close(*args, **kwargs)
+
+    def units_nice(self, varname: str) -> str | None:
         """Return units of given variable, in a predictible format.
 
         Predictable format:
@@ -155,12 +192,17 @@ class GenericDatasetAccessor(ABC):
 
          - never uses parentheses
 
-        :param varname: the name of the variable in the NetCDF file.
+        Parameters
+        ----------
+        varname
+            The name of the variable in the NetCDF file.
 
-        :returns: the formatted units (or None for dimensionless variables).
+        Returns
+        -------
+            The formatted units (or None for dimensionless variables).
 
         """
-        units = self._dataset[varname].attrs["units"]
+        units = self[varname].attrs["units"]
         replacements = {
             "-": None,
             "1": None,
@@ -174,45 +216,106 @@ class GenericDatasetAccessor(ABC):
             pass
         return units
 
-    def check_units(self, varname: str, expected: str,
-                    nice: bool = True) -> None:
-        """Raise ValueError if units of variable are not as expected."""
+    def check_units(
+            self,
+            varname: str,
+            expected: str,
+            nice: bool = True,
+    ) -> None:
+        """Make sure that units of given variable are as expected.
+
+        Parameters
+        ----------
+        varname
+            The name of the variable to check.
+        expected
+            The expected units.
+        nice
+            Whether expected units are given as "nice" units
+            (cf. method units_nice)
+
+        Raises
+        ------
+        ValueError
+            If the units are not as expected.
+
+        """
         if nice:
             actual = self.units_nice(varname)
         else:
-            actual = self._dataset[varname].attrs["units"]
+            actual = self[varname].attrs["units"]
         if actual != expected:
             raise ValueError('Bad units: expected "%s", got "%s"' %
                              (expected, actual))
 
+    def units_mpl(self, varname : str) -> str:
+        """Return the units of given variable, formatted for Matplotlib."""
+        units = self.units_nice(varname).split()
+        for i, s in enumerate(units):
+            n = len(s) - 1
+            while (n >= 0 and s[n] in "-0123456789"):
+                n -= 1
+            if n < 0:
+                raise ValueError("Could not process units.")
+            if n != len(s):
+                units[i] = "%s$^{%s}$" % (s[:n+1], s[n+1:])
+            return " ".join(units)
+
+    def vardesc(self, varname: str) -> str:
+        """Return a (hopefully) human readable description of the variable."""
+        for attr in ("long_name", "standard_name"):
+            try:
+                return self[varname].attrs[attr]
+            except KeyError:
+                continue
+        return varname
+
     @property
-    def time_dim(self) -> str:
-        """Return the name of the time dimension of the file."""
-        guesses = ("time_counter", "time")
-        return _unique_guess_in_iterable(guesses, self._dataset.dims)
+    def dimname_time(self) -> str:
+        """The name of the time dimension of the file."""
+        return self._guess_dimname(("time_counter", "time"))
+
+    @property
+    def ntimes(self) -> int:
+        """The number of time steps in the file."""
+        return self.sizes[self.dimname_time]
 
     def time_coord(self, varname: str) -> str:
         """Return the name of the time coordinate associated with variable."""
-        dim = self.time_dim
-        if dim not in self._dataset[varname].dims:
+        # TODO: this method needs a better / safer implementation
+        dim = self.dimname_time
+        if dim not in self[varname].dims:
             raise ValueError("Cannot determine name of time coordinate.")
-        coord = self._dataset[varname].attrs["coordinates"]
+        try:
+            coord = self[varname].attrs["coordinates"]
+        except KeyError:
+            coord = " ".join(list(self[varname].coords.keys()))
         if " " in coord:
-            coord = coord.split()[self._dataset[varname].dims.index(dim)]
+            coord = coord.split()[self[varname].dims.index(dim)]
         if coord.startswith("_"):
-            coord = "time" + coord
+            coord = "time%s" % coord
         return coord
 
-    def times(self, varname: str, dtype: str = "datetime"):
+    def times(
+            self,
+            varname: str,
+            dtype: DateTypeStr = "datetime",
+    ) -> NDArray[DateType]:
         """Return array of times corresponding to given variable.
 
-        Parameter "dtype" indicates which format will be used for the date
-        objects. Type "datetime" corresponds to Python's standard library
-        datetime object, type "pandas" corresponds to the default type used by
-        pandas (and similarly for types "numpy" and "xarray").
+        Parameters
+        ----------
+        varname
+            The name of the variable of interest.
+        dtype
+            The data type of dates in the output.
+
+        Returns
+        -------
+            A numpy array containging the dates.
 
         """
-        values = self._dataset[self.time_coord(varname)]
+        values = self[self.time_coord(varname)]
         if dtype == "datetime":
             f = "%Y-%m-%d %H-%M-%S %f"
             def convert(t):
@@ -248,7 +351,7 @@ class GenericDatasetAccessor(ABC):
 
     def _guess_dimname(self, guesses):
         """Return name of only dimension in guesses that is found, or error."""
-        return _unique_guess_in_iterable(guesses, self._dataset.dims)
+        return _unique_guess_in_iterable(guesses, self.dims)
 
     def _guess_varname(self, guesses):
         """Return name of only variable in guesses that is found, or error."""
@@ -261,7 +364,7 @@ class GenericDatasetAccessor(ABC):
         This property makes sense for unstructured grids only.
 
         """
-        return self._guess_dimname(["cells", "cell_mesh"])
+        return self._guess_dimname(["cell", "cells", "cell_mesh"])
 
     @property
     def ncells(self) -> int:
@@ -270,7 +373,7 @@ class GenericDatasetAccessor(ABC):
         This property makes sense for unstructured grids only.
 
         """
-        return self._dataset.sizes[self.dimname_ncells]
+        return self.sizes[self.dimname_ncells]
 
     @property
     @method_cacher
@@ -311,25 +414,28 @@ class GenericDatasetAccessor(ABC):
         ) -> None:
         """Plot given colors as colored polygons on unstructured grid.
 
-        :param colors: the face colors of the polygons. There must be exactly
-            as many colors as there are cells in the grid.
-
-        :param box: the longitude and latitude limits of the interesting part
-            of the data, in the format (lon_min, lon_max, lat_min, lat_max).
-            Grid cells outside of this range will not be plotted.
-
-        :param ax: the Matplotlib axis object onto which to draw the data.
-
-        :param \\*\\*kwargs: these are passed to Matplotlib's Polygon.
+        Parameters
+        ----------
+        colors
+            The face colors of the polygons. There must be exactly as many
+            colors as there are cells in the grid.
+        box
+            The longitude and latitude limits of the interesting part of the
+            data, in the format (lon_min, lon_max, lat_min, lat_max). Grid
+            cells outside of this range will not be plotted.
+        ax
+            The Matplotlib axis object onto which to draw the data.
+        **kwargs
+            These are passed "as is" to Matplotlib's Polygon.
 
         """
         if ax is None:
             ax = plt.gca()
-        lon_bnds = self._dataset[self.varnames_lonlat_bounds[0]].values
-        lat_bnds = self._dataset[self.varnames_lonlat_bounds[1]].values
+        lon_bnds = self[self.varnames_lonlat_bounds[0]].values
+        lat_bnds = self[self.varnames_lonlat_bounds[1]].values
         if box is not None:
-            lon = self._dataset[self.varnames_lonlat[0]].values
-            lat = self._dataset[self.varnames_lonlat[1]].values
+            lon = self[self.varnames_lonlat[0]].values
+            lat = self[self.varnames_lonlat[1]].values
             idx = (lon >= box[0]) * (lon <= box[1]) * \
                   (lat >= box[2]) * (lat <= box[3])
             idx = np.array(range(self.ncells))[idx]
@@ -355,16 +461,17 @@ class GenericDatasetAccessor(ABC):
         ) -> None:
         """Plot given values as colored polygons on unstructured grid.
 
-        :param values: the values to be plotted. There must be exactly as many
-            values as there are grids in the cell.
-
-        :param cmap: the colormap to use.
-
-        :param vmin: the minimum value to show on the color scale.
-
-        :param vmax: the maximum value to show on the color scale.
-
-        :param \\*\\*kwargs: these are passed to self.plot_ugridded_colors.
+        Parameters
+        ----------
+        values
+            The values to be plotted. There must be exactly as many values as
+            there are grids in the cell.
+        cmap
+            The colormap to use.
+        vmin, vmax
+            The minimum and maximum values to show on the color scale.
+        **kwargs
+            These are passed "as is" to self.plot_ugridded_colors.
 
         """
         if vmin is None:
@@ -378,13 +485,14 @@ class GenericDatasetAccessor(ABC):
 class WizardDatasetAccessor(GenericDatasetAccessor):
 
     @property
+    @method_cacher
     def whoami(self):
         """Guess and return the name of the model that created the output."""
         try:
-            name = self._dataset.attrs["name"]
+            name = self.attrs["name"]
         except KeyError:
             try:
-                model = self._dataset.attrs["model"]
+                model = self.attrs["model"]
             except KeyError:
                 pass
             else:
@@ -399,16 +507,19 @@ class WizardDatasetAccessor(GenericDatasetAccessor):
         raise ValueError(msg)
 
     @property
+    @method_cacher
     def myself(self):
         """Return reference to named accessor corresponding to self."""
         return getattr(self._dataset, self.whoami)
 
     @property
+    @method_cacher
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to dataset."""
         return self.myself.crs_pyproj
 
     @property
+    @method_cacher
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to dataset."""
         return self.myself.crs_cartopy
@@ -421,9 +532,10 @@ class WizardDatasetAccessor(GenericDatasetAccessor):
 class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 
     @property
+    @method_cacher
     def epsg(self):
         """Return the EPSG code associated with file."""
-        epsg = self._dataset.attrs["projection"].split(":")
+        epsg = self.attrs["projection"].split(":")
         # Here we account for a typo (espg) in the XIOS configuration files
         # that were used in ISMIP6 simulations, and potentially others
         if len(epsg) != 2 or epsg[0] not in ("epsg", "espg"):
@@ -431,6 +543,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         return int(epsg[1])
 
     @property
+    @method_cacher
     def icesheet(self):
         """Return name of icesheet, inferred from global attributes."""
         if self.epsg == 3031:
@@ -441,19 +554,13 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
             raise RuntimeError("Could not infer name of icesheet.")
 
     @property
+    @method_cacher
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to dataset."""
-        if self.epsg == 3031:
-            proj = ("+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 "
-                    "+x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs")
-        elif self.epsg == 3413:
-            proj = ("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 "
-                    "+x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs")
-        else:
-            raise ValueError("Unknown or unsupported EPSG: %d." % self.epsg)
-        return pyproj.CRS.from_proj4(proj)
+        return pyproj.CRS.from_epsg(self.epsg)
 
     @property
+    @method_cacher
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
         if self.epsg == 3031:
@@ -469,7 +576,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
     @method_cacher
     def meshname(self):
         """Return the name of the mesh (or None if it cannot be guessed)."""
-        dims = self._dataset.sizes.keys()
+        dims = self.sizes.keys()
         candidates = [d for d in dims if len(d) > 6 and
                       d.startswith("n") and d.endswith("_edge")]
         if len(candidates) != 1:
@@ -481,6 +588,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         return meshname
 
     @property
+    @method_cacher
     def dimname_edge(self):
         """Return the name of the dimension that holds the number of edges."""
         name = self.meshname
@@ -489,6 +597,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         return name
 
     @property
+    @method_cacher
     def dimname_face(self):
         """Return the name of the dimension that holds the number of faces."""
         name = self.meshname
@@ -497,6 +606,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         return name
 
     @property
+    @method_cacher
     def dimname_node(self):
         """Return the name of the dimension that holds the number of nodes."""
         name = self.meshname
@@ -505,6 +615,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         return name
 
     @property
+    @method_cacher
     def dimname_vertex(self):
         """Return the name of the dim. that holds the number of vertices."""
         name = self.meshname
@@ -517,9 +628,9 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
     def triangulation(self):
         """Return Triangulation object corresponding to data."""
         return Triangulation(
-            self._dataset["x"].values[0,:],
-            self._dataset["y"].values[0,:],
-            self._dataset[self.meshname + "_face_nodes"].values)
+            self["x"].values[0,:],
+            self["y"].values[0,:],
+            self[self.meshname + "_face_nodes"].values)
 
     @property
     @method_cacher
@@ -529,13 +640,13 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         The indices are given in Python convention (ie. starting at 0).
 
         """
-        n_faces = self._dataset.sizes[self.dimname_face]
-        n_vertices = self._dataset.sizes[self.dimname_vertex]
+        n_faces = self.sizes[self.dimname_face]
+        n_vertices = self.sizes[self.dimname_vertex]
         varname = self.meshname + "_face_nodes"
-        out = np.array(self._dataset[varname].values)
+        out = np.array(self[varname].values)
         if out.shape != (n_faces, n_vertices):
             raise ValueError("Map array has invalid shape.")
-        start_index = int(self._dataset[varname].start_index)
+        start_index = int(self[varname].start_index)
         if start_index > 0:
             out -= start_index
         elif start_index != 0:
@@ -545,12 +656,17 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
     def node2face(self, values : Iterable) -> np.typing.NDArray:
         """Convert given node values to face values.
 
-        :param values: the array of node values to convert.
+        Parameters
+        ----------
+        values
+            The array of node values to convert.
 
-        :returns: the corresponding array of face values.
+        Returns
+        -------
+            The corresponding array of face values.
 
         """
-        if len(values) != self._dataset.sizes[self.dimname_node]:
+        if len(values) != self.sizes[self.dimname_node]:
             raise ValueError("Bad length for input.")
         map_ = self.map_face_node
         out = np.zeros(map_.shape[0])
@@ -565,11 +681,13 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
     surface_types = ("ter", "lic", "oce", "sic")
 
     @property
+    @method_cacher
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to the file."""
         raise NotImplementedError("Not implemented yet.")
 
     @property
+    @method_cacher
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
         return cartopy.crs.PlateCarree()
@@ -589,10 +707,8 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
         handle these cases). For these grid cells, a NAN value is used.
 
         """
-        lon, lat = self._dataset["lon"].values, self._dataset["lat"].values
+        lon, lat = self["lon"].values, self["lat"].values
         nlon, nlat = lon.size, lat.size
-        lonmid = (lon[1:] + lon[:-1]) / 2
-        latmid = (lat[1:] + lat[:-1]) / 2
         geod = pyproj.Geod(ellps="WGS84")
         out = np.full([nlat, nlon], np.nan)
         for i, j in itertools.product(range(1, nlat-1), range(1, nlon-1)):
@@ -606,7 +722,7 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
     def grid_type(self):
         """Return the type of grid: "reg" (lat/lon) or "ico" (dynamico)."""
         dims = ("lon", "lat", "cell", "nvertex")
-        dims = dict((d, d in self._dataset.dims) for d in dims)
+        dims = dict((d, d in self.dims) for d in dims)
         if (dims["lon"] and dims["lat"] and
             not dims["cell"] and not dims["nvertex"]):
             return "reg"
@@ -621,15 +737,15 @@ class MARDatasetAccessor(GenericDatasetAccessor):
 
     def time_coord(self, varname):
         """Return the name of the time coordinate associated with variable."""
-        return "time" if "time" in self._dataset[varname].dims else None
+        return "time" if "time" in self[varname].dims else None
 
     @property
     def crs_pyproj(self):
         """Return the CRS (pyproj) corresponding to the file."""
         try:
-            prms = self._dataset.attrs["mapping"]
+            prms = self.attrs["mapping"]
         except KeyError:
-            prms = self._dataset.attrs["projection"]
+            prms = self.attrs["projection"]
         else:
             prms = prms.replace(";", ",")
         prms = dict(s.split("=") for s in prms.split(","))
@@ -649,9 +765,9 @@ class MARDatasetAccessor(GenericDatasetAccessor):
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
         try:
-            prms = self._dataset.attrs["mapping"]
+            prms = self.attrs["mapping"]
         except KeyError:
-            prms = self._dataset.attrs["projection"]
+            prms = self.attrs["projection"]
         else:
             prms = prms.replace(";", ",")
         prms = dict(s.split("=") for s in prms.split(","))
