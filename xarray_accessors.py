@@ -28,6 +28,7 @@
 
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
+from __future__ import annotations
 from abc import ABC
 from typing import Iterable
 import itertools
@@ -424,7 +425,8 @@ class GenericDatasetAccessor(ABC):
             data, in the format (lon_min, lon_max, lat_min, lat_max). Grid
             cells outside of this range will not be plotted.
         ax
-            The Matplotlib axis object onto which to draw the data.
+            The Matplotlib axis object onto which to draw the data (default is
+            current axis).
         **kwargs
             These are passed "as is" to Matplotlib's Polygon.
 
@@ -454,7 +456,7 @@ class GenericDatasetAccessor(ABC):
     def plot_ugridded_values(
             self,
             values: Iterable[NumType],
-            cmap=mpl.colormaps["viridis"], #TODO: needs a type hint
+            cmap=None, #TODO: needs a type hint
             vmin: NumType | None = None,
             vmax: NumType | None = None,
             **kwargs,
@@ -466,10 +468,12 @@ class GenericDatasetAccessor(ABC):
         values
             The values to be plotted. There must be exactly as many values as
             there are grids in the cell.
-        cmap
-            The colormap to use.
-        vmin, vmax
-            The minimum and maximum values to show on the color scale.
+        cmap: colormap | None
+            The colormap to use (default is viridis).
+        vmin
+            The minimum value to show on the color scale.
+        vmax
+            The maximum value to show on the color scale.
         **kwargs
             These are passed "as is" to self.plot_ugridded_colors.
 
@@ -478,6 +482,8 @@ class GenericDatasetAccessor(ABC):
             vmin = values.min()
         if vmax is None:
             vmax = values.max()
+        if cmap is None:
+            cmap = mpl.colormaps["viridis"]
         colors = cmap(np.interp(values, [vmin, vmax], [0, 1]))
         self.plot_ugridded_colors(colors, **kwargs)
 

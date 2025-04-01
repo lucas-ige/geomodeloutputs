@@ -52,13 +52,12 @@ that have non CF-compliant time units, such as “months since …”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filepath</strong> (<em>str</em>) – location of the file on disk.</p></li>
-<li><p><strong>**kwargs</strong> – additional keyword arguments, if any, are passed “as
-is” to xarray.open_dataset.</p></li>
+<li><p><strong>filepath</strong> (<em>str</em>) – The location of the file on disk.</p></li>
+<li><p><strong>**kwargs</strong> – These are passed “as is” to xarray.open_dataset.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the opened dataset.</p>
+<dd class="field-even"><p><em>The opened dataset.</em></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Dataset</em></p>
@@ -75,18 +74,20 @@ files that have non CF-compliant time units, such as “months since …”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filepath</strong> (<em>str</em>) – location of the file(s) on disk. It can be any pattern
-accepted by xarray.open_mfdataset.</p></li>
-<li><p><strong>**kwargs</strong> – additional keyword arguments, if any, are passed “as
-is” to xarray.open_dataset, with one exception: named argument
-“preprocess” is not allowed here.</p></li>
+<li><p><strong>filepath</strong> (<em>str</em>) – The location of the file(s) on disk. It can be any pattern accepted by
+xarray.open_mfdataset.</p></li>
+<li><p><strong>**kwargs</strong> – These are passed “as is” to xarray.open_dataset, with one exception:
+named argument “preprocess” is not allowed here.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the opened dataset.</p>
+<dd class="field-even"><p><em>The opened dataset.</em></p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dataset</em></p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If “preprocess” is present as a named argument.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dataset</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -110,13 +111,13 @@ is” to xarray.open_dataset, with one exception: named argument
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>varname</strong> (<em>str</em>) – the name of the variable in the NetCDF file.</p>
+<dd class="field-odd"><p><strong>varname</strong> (<em>str</em>) – The name of the variable in the NetCDF file.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the formatted units (or None for dimensionless variables).</p>
+<dd class="field-even"><p><em>The formatted units (or None for dimensionless variables).</em></p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
+<dd class="field-odd"><p>str | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -159,38 +160,33 @@ contain the coordinates of the vertices of each cell.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>colors</strong> (<em>Iterable</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>str</em><em> | </em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>tuple</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>] </em><em>| </em><em>str</em><em>, </em><em>float</em><em>] </em><em>| </em><em>tuple</em><em>[</em><em>tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>float</em><em>]</em><em>]</em>) – the face colors of the polygons. There must be exactly
-as many colors as there are cells in the grid.</p></li>
-<li><p><strong>box</strong> (<em>tuple</em><em>[</em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>, </em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>, </em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>, </em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>] </em><em>| </em><em>None</em>) – the longitude and latitude limits of the interesting part
-of the data, in the format (lon_min, lon_max, lat_min, lat_max).
-Grid cells outside of this range will not be plotted.</p></li>
-<li><p><strong>ax</strong> (<em>Axes</em><em> | </em><em>None</em>) – the Matplotlib axis object onto which to draw the data.</p></li>
-<li><p><strong>**kwargs</strong> – these are passed to Matplotlib’s Polygon.</p></li>
+<li><p><strong>colors</strong> (<em>Iterable</em><em>[</em><em>color</em><em>]</em>) – The face colors of the polygons. There must be exactly as many
+colors as there are cells in the grid.</p></li>
+<li><p><strong>box</strong> (<em>tuple</em><em>[</em><em>number</em><em>, </em><em>number</em><em>, </em><em>number</em><em>, </em><em>number</em><em>] </em><em>| </em><em>None</em>) – The longitude and latitude limits of the interesting part of the
+data, in the format (lon_min, lon_max, lat_min, lat_max). Grid
+cells outside of this range will not be plotted.</p></li>
+<li><p><strong>ax</strong> (<em>Axes</em><em> | </em><em>None</em>) – The Matplotlib axis object onto which to draw the data (default is
+current axis).</p></li>
+<li><p><strong>**kwargs</strong> – These are passed “as is” to Matplotlib’s Polygon.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap=&lt;matplotlib.colors.ListedColormap</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Plot given values as colored polygons on unstructured grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>values</strong> (<em>Iterable</em><em>[</em><em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em>]</em>) – the values to be plotted. There must be exactly as many
-values as there are grids in the cell.</p></li>
-<li><p><strong>cmap</strong> – the colormap to use.</p></li>
-<li><p><strong>vmin</strong> (<em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em> | </em><em>None</em>) – the minimum value to show on the color scale.</p></li>
-<li><p><strong>vmax</strong> (<em>int</em><em> | </em><em>float</em><em> | </em><em>number</em><em> | </em><em>None</em>) – the maximum value to show on the color scale.</p></li>
-<li><p><strong>**kwargs</strong> – these are passed to self.plot_ugridded_colors.</p></li>
+<li><p><strong>values</strong> (<em>Iterable</em><em>[</em><em>NumType</em><em>]</em>) – The values to be plotted. There must be exactly as many values as
+there are grids in the cell.</p></li>
+<li><p><strong>cmap</strong> (<em>colormap</em><em> | </em><em>None</em>) – The colormap to use (default is viridis).</p></li>
+<li><p><strong>vmin</strong> (<em>NumType</em><em> | </em><em>None</em>) – The minimum value to show on the color scale.</p></li>
+<li><p><strong>vmax</strong> (<em>NumType</em><em> | </em><em>None</em>) – The maximum value to show on the color scale.</p></li>
+<li><p><strong>**kwargs</strong> – These are passed “as is” to self.plot_ugridded_colors.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>

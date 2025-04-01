@@ -30,11 +30,21 @@ release = 'latest'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
 ]
 
+# Napoleon configuration
+napoleon_use_param = True
+napoleon_use_rtype = False
+
 # Autodoc configuration
 autodoc_typehints = "description"
+autodoc_typehints_description_target = "documented"
+autodoc_type_aliases = {
+    "NumType": "number",
+    "ColorType": "color",
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
