@@ -30,11 +30,10 @@
 
 from __future__ import annotations
 from abc import ABC
-from typing import Iterable
+from typing import Any, Sequence
 import itertools
 from datetime import datetime
 import numpy as np
-from numpy.typing import NDArray
 import pandas as pd
 import xarray as xr
 import pyproj
@@ -45,6 +44,7 @@ from matplotlib.tri import Triangulation
 import cartopy
 from ._typing import NumType, ColorType, DateTypeStr, DateType
 from ._genutils import method_cacher
+from .graphics import units_mpl
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
 
@@ -160,7 +160,7 @@ class GenericDatasetAccessor(ABC):
 
     def __init__(self, dataset : xr.Dataset) -> None:
         self._dataset = dataset
-        self._cache = dict()
+        self._cache: dict[Any, Any] = dict()
 
     def __getitem__(self, *args, **kwargs):
         return self._dataset.__getitem__(*args, **kwargs)
@@ -180,7 +180,7 @@ class GenericDatasetAccessor(ABC):
     def close(self, *args, **kwargs):
         return self._dataset.close(*args, **kwargs)
 
-    def units_nice(self, varname: str) -> str | None:
+    def units_nice(self, varname: str) -> str:
         """Return units of given variable, in a predictible format.
 
         Predictable format:
@@ -251,16 +251,7 @@ class GenericDatasetAccessor(ABC):
 
     def units_mpl(self, varname : str) -> str:
         """Return the units of given variable, formatted for Matplotlib."""
-        units = self.units_nice(varname).split()
-        for i, s in enumerate(units):
-            n = len(s) - 1
-            while (n >= 0 and s[n] in "-0123456789"):
-                n -= 1
-            if n < 0:
-                raise ValueError("Could not process units.")
-            if n != len(s):
-                units[i] = "%s$^{%s}$" % (s[:n+1], s[n+1:])
-            return " ".join(units)
+        return units_mpl(self.units_nice(varname))
 
     def vardesc(self, varname: str) -> str:
         """Return a (hopefully) human readable description of the variable."""
@@ -301,7 +292,7 @@ class GenericDatasetAccessor(ABC):
             self,
             varname: str,
             dtype: DateTypeStr = "datetime",
-    ) -> NDArray[DateType]:
+    ) -> np.ndarray:
         """Return array of times corresponding to given variable.
 
         Parameters
@@ -408,7 +399,7 @@ class GenericDatasetAccessor(ABC):
 
     def plot_ugridded_colors(
             self,
-            colors: Iterable[ColorType],
+            colors: Sequence[ColorType],
             box: tuple[NumType, NumType, NumType, NumType] | None = None,
             ax: mpl.axes.Axes | None = None,
             **kwargs
@@ -455,7 +446,7 @@ class GenericDatasetAccessor(ABC):
 
     def plot_ugridded_values(
             self,
-            values: Iterable[NumType],
+            values: np.ndarray,
             cmap=None, #TODO: needs a type hint
             vmin: NumType | None = None,
             vmax: NumType | None = None,
@@ -484,7 +475,7 @@ class GenericDatasetAccessor(ABC):
             vmax = values.max()
         if cmap is None:
             cmap = mpl.colormaps["viridis"]
-        colors = cmap(np.interp(values, [vmin, vmax], [0, 1]))
+        colors = cmap(np.interp(values, np.array([vmin, vmax]), [0, 1]))
         self.plot_ugridded_colors(colors, **kwargs)
 
 @xr.register_dataset_accessor("wizard")
@@ -640,7 +631,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 
     @property
     @method_cacher
-    def map_face_node(self) -> np.typing.NDArray:
+    def map_face_node(self) -> np.ndarray:
         """An array giving, for each face, the indices of its vertices.
 
         The indices are given in Python convention (ie. starting at 0).
@@ -659,7 +650,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
             raise ValueError("Negative start index.")
         return out
 
-    def node2face(self, values : Iterable) -> np.typing.NDArray:
+    def node2face(self, values : np.ndarray) -> np.ndarray:
         """Convert given node values to face values.
 
         Parameters
