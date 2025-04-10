@@ -78,8 +78,8 @@ be usable with outputs of other Elmer/Ice simulations, if they have a different 
 <span class="kn">import</span><span class="w"> </span><span class="nn">geomodeloutputs</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
-<span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;output.nc&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">tripcolor</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">elmerice</span><span class="o">.</span><span class="n">triangulation</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;orog&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,:])</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;output.nc&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">elmerice</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tripcolor</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">triangulation</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;orog&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,:])</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;orog.png&quot;</span><span class="p">)</span>
 <span class="n">ds</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
@@ -87,14 +87,15 @@ be usable with outputs of other Elmer/Ice simulations, if they have a different 
 <p>In this example, you can see that:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the NetCDF file is opened, accessed, and closed in exactly the same way as in the previous example.</p></li>
+<li><p>the NetCDF file is opened, accessed, and closed in exactly the same way as in the previous example, except that we
+add the name of the model after calling <cite>xr.open_dataset</cite> to unlock the Elmer/Ice functionality.</p></li>
 <li><p>the details of the calculation of the Triangulation instance are now hidden.</p></li>
 <li><p>you do not need to know the name of the mesh (it is automatically detected by geomodeloutputs). Your script will
 therefore be usable “as is” with other Elmer/Ice output files.</p></li>
 </ul>
 </div></blockquote>
 <p>In fact, if you need to know it, geomodeloutputs can give you the name of the mesh:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">elmerice</span><span class="o">.</span><span class="n">meshname</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">meshname</span><span class="p">)</span>
 
 <span class="go">&quot;greenland&quot;</span>
 </pre></div>
@@ -117,6 +118,8 @@ such new attribute for each model supported by geomodeloutputs. Think of these a
 each model. These drawers are actually called “accessors” in xarray jargon.</p>
 <p>For example, the added functionality for Elmer/Ice outputs can be accessed via <code class="code docutils literal notranslate"><span class="pre">ds.elmerice.*</span></code>, and the added
 functionality for LMDz outputs can be accessed via <code class="code docutils literal notranslate"><span class="pre">ds.lmdz.*</span></code>.</p>
+<p>Each accessor also features the usual xarray interface. For example, <code class="code docutils literal notranslate"><span class="pre">ds.lmdz[&quot;snow&quot;]</span></code> is equivalent to
+<code class="code docutils literal notranslate"><span class="pre">ds[&quot;snow&quot;]</span></code>.</p>
 </section>
 <section id="the-wizard">
 <h2>The wizard<a class="headerlink" href="#the-wizard" title="Link to this heading">¶</a></h2>

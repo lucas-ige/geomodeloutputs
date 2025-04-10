@@ -41,14 +41,15 @@ Using geomodeloutputs, you might write a script like this instead:
   import geomodeloutputs
   import matplotlib.pyplot as plt
 
-  ds = xr.open_dataset("output.nc")
-  plt.tripcolor(ds.elmerice.triangulation, ds["orog"][-1,:])
+  ds = xr.open_dataset("output.nc").elmerice
+  plt.tripcolor(ds.triangulation, ds["orog"][-1,:])
   plt.savefig("orog.png")
   ds.close()
 
 In this example, you can see that:
 
- - the NetCDF file is opened, accessed, and closed in exactly the same way as in the previous example.
+ - the NetCDF file is opened, accessed, and closed in exactly the same way as in the previous example, except that we
+   add the name of the model after calling `xr.open_dataset` to unlock the Elmer/Ice functionality.
 
  - the details of the calculation of the Triangulation instance are now hidden.
 
@@ -59,7 +60,7 @@ In fact, if you need to know it, geomodeloutputs can give you the name of the me
 
 .. code-block:: python
 
-  >>> print(ds.elmerice.meshname)
+  >>> print(ds.meshname)
 
   "greenland"
 
@@ -83,6 +84,9 @@ each model. These drawers are actually called "accessors" in xarray jargon.
 
 For example, the added functionality for Elmer/Ice outputs can be accessed via :code:`ds.elmerice.*`, and the added
 functionality for LMDz outputs can be accessed via :code:`ds.lmdz.*`.
+
+Each accessor also features the usual xarray interface. For example, :code:`ds.lmdz["snow"]` is equivalent to
+:code:`ds["snow"]`.
 
 The wizard
 ==========
