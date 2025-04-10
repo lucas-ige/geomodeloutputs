@@ -43,8 +43,22 @@ CF_CALENDARTYPE_ALL = (CF_CALENDARTYPE_GREGORIAN +
                        CF_CALENDARTYPE_360DAYS)
 CF_CALENDARTYPE_DEFAULT = "gregorian"
 
-def ndays_in_year(year: int, calendar: str = CF_CALENDARTYPE_DEFAULT) -> int:
-    """Return number of days in given year according to given calendar."""
+def ndays_in_year(year, calendar=CF_CALENDARTYPE_DEFAULT):
+    """Return the number of days in given year according to given calendar.
+
+    Parameters
+    ----------
+    year : int
+        The year of interest.
+    calendar : str
+        The type of calendar as a CF-compliant calendar name.
+
+    Returns
+    -------
+    int
+        The number of days in given year and for given calendar.
+
+    """
     if calendar in CF_CALENDARTYPE_NOLEAP:
         return 365
     elif calendar in CF_CALENDARTYPE_ALLLEAP:
@@ -55,12 +69,24 @@ def ndays_in_year(year: int, calendar: str = CF_CALENDARTYPE_DEFAULT) -> int:
         return int(datetime(year, 12, 31).strftime("%j"))
     raise ValueError("Invalid calendar value: %s." % calendar)
 
-def ndays_in_month(
-        year: int,
-        month: int,
-        calendar: str = CF_CALENDARTYPE_DEFAULT
-) -> int:
-    """Return number of days in given month according to given calendar."""
+def ndays_in_month(year, month, calendar=CF_CALENDARTYPE_DEFAULT):
+    """Return the number of days in given month according to given calendar.
+
+    Parameters
+    ----------
+    year : int
+        The year of interest.
+    month : int
+        The month of interest (1, 2, ..., 12).
+    calendar : str
+        The type of calendar as a CF-compliant calendar name.
+
+    Returns
+    -------
+    int
+        The number of days in given month and year and for given calendar.
+
+    """
     if calendar not in CF_CALENDARTYPE_ALL:
         raise ValueError("Invalid calendar value: %s." % calendar)
     if calendar in CF_CALENDARTYPE_360DAYS:
@@ -76,12 +102,29 @@ def ndays_in_month(
             month = 1
         return (datetime(year, month, 1) - timedelta(days=1)).day
 
-def datetime_plus_nmonths(
-        start: datetime,
-        nmonths: int,
-        calendar: str = CF_CALENDARTYPE_DEFAULT
-) -> datetime:
-    """Return (start+nmonths)."""
+def datetime_plus_nmonths(start, nmonths, calendar=CF_CALENDARTYPE_DEFAULT):
+    """Return (start + nmonths).
+
+    Adding a number of months to a date is ill-defined for calendars other than
+    360-day, because the number of days in a month varies throughout the year.
+    This function does what it can to calculate a reasonable value for all
+    calendar types.
+
+    Parameters
+    ----------
+    start : datetime
+        The start date.
+    nmonths : int
+        The number of months to add to start.
+    calendar : str
+        The type of calendar as a CF-compliant calendar name.
+
+    Returns
+    -------
+    datetime
+        The value of start + nmonths.
+
+    """
     if calendar not in CF_CALENDARTYPE_GREGORIAN:
         raise NotImplementedError("This calendar is not yet supported.")
     n, r = divmod(nmonths, 1)

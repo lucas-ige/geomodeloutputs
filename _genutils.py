@@ -33,7 +33,7 @@ OF SUCH DAMAGE.
 import functools
 
 def keyify_arg(arg):
-    """Return key representing given argument."""
+    """Return unique key representing given argument."""
     if isinstance(arg, str):
         return arg
     else:
