@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Utility functions &#8212; geomodeloutputs latest documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=0c472235" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=424f8d56" />
     <script src="_static/documentation_options.js?v=c6e86fd7"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -45,10 +45,11 @@
 <h1>Utility functions<a class="headerlink" href="#utility-functions" title="Link to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">geomodeloutputs.xarray_accessors.</span></span><span class="sig-name descname"><span class="pre">open_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-prename descclassname"><span class="pre"></span></span><span class="sig-name descname"><span class="pre">open_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Open dataset.</p>
 <p>This function acts as xarray.open_dataset, except that it can handle files
-that have non CF-compliant time units, such as “months since …”.</p>
+that use “months since…” time units but a calendar that is not a 360-day
+calendar.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -57,20 +58,18 @@ that have non CF-compliant time units, such as “months since …”.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>The opened dataset.</em></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dataset</em></p>
+<dd class="field-even"><p><em>xarray.Dataset</em> – The opened dataset.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">geomodeloutputs.xarray_accessors.</span></span><span class="sig-name descname"><span class="pre">open_mfdataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-prename descclassname"><span class="pre"></span></span><span class="sig-name descname"><span class="pre">open_mfdataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Open multiple-file dataset.</p>
 <p>This function acts as xarray.open_mfdataset, except that it can handle
-files that have non CF-compliant time units, such as “months since …”.</p>
+files that use “months since…” time units but a calendar that is not a
+360-day calendar.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -81,13 +80,10 @@ named argument “preprocess” is not allowed here.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>The opened dataset.</em></p>
+<dd class="field-even"><p><em>xarray.Dataset</em> – The opened dataset.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If “preprocess” is present as a named argument.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Dataset</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -98,7 +94,7 @@ named argument “preprocess” is not allowed here.</p></li>
 <p>Some functionality is implemented for all models. For example, the method <code class="code docutils literal notranslate"><span class="pre">units_nice</span></code> is common to all models, so you can use, <code class="code docutils literal notranslate"><span class="pre">ds.lmdz.units_nice</span></code>, <code class="code docutils literal notranslate"><span class="pre">ds.elmerice.units_nice</span></code>, and of course <code class="code docutils literal notranslate"><span class="pre">ds.wizard.units_nice</span></code>.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">units_nice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varname</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-prename descclassname"><span class="pre">ds.</span></span><span class="sig-name descname"><span class="pre">units_nice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">varname</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Return units of given variable, in a predictible format.</p>
 <p>Predictable format:</p>
 <blockquote>
@@ -114,29 +110,26 @@ named argument “preprocess” is not allowed here.</p></li>
 <dd class="field-odd"><p><strong>varname</strong> (<em>str</em>) – The name of the variable in the NetCDF file.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>The formatted units (or None for dimensionless variables).</em></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str | None</p>
+<dd class="field-even"><p><em>str</em> – The formatted units (or None for dimensionless variables).</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">crs_pyproj</span></span></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ds.</span></span><span class="sig-name descname"><span class="pre">crs_pyproj</span></span></dt>
 <dd><p>The CRS (pyproj) corresponding to dataset.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">crs_cartopy</span></span></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ds.</span></span><span class="sig-name descname"><span class="pre">crs_cartopy</span></span></dt>
 <dd><p>The CRS (cartopy) corresponding to dataset.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">varnames_lonlat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ds.</span></span><span class="sig-name descname"><span class="pre">varnames_lonlat</span></span></dt>
 <dd><p>The names of the longitude and latitude variables.</p>
 </dd></dl>
 
@@ -146,7 +139,7 @@ named argument “preprocess” is not allowed here.</p></li>
 <p>This section describes functionality that is implemented for all model outputs that are based on unstructured grids.</p>
 <dl class="py property">
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">varnames_lonlat_bounds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ds.</span></span><span class="sig-name descname"><span class="pre">varnames_lonlat_bounds</span></span></dt>
 <dd><p>The names of the lon/lat bound variables.</p>
 <p>This property only makes sense for unstructured grids. For these grids,
 the bound variables are arrays of shape (n_cells, n_vertices) that
@@ -155,19 +148,19 @@ contain the coordinates of the vertices of each cell.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">colors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-prename descclassname"><span class="pre">ds.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">colors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Plot given colors as colored polygons on unstructured grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>colors</strong> (<em>Iterable</em><em>[</em><em>color</em><em>]</em>) – The face colors of the polygons. There must be exactly as many
+<li><p><strong>colors</strong> (<em>sequence</em><em> of </em><em>colors</em>) – The face colors of the polygons. There must be exactly as many
 colors as there are cells in the grid.</p></li>
-<li><p><strong>box</strong> (<em>tuple</em><em>[</em><em>number</em><em>, </em><em>number</em><em>, </em><em>number</em><em>, </em><em>number</em><em>] </em><em>| </em><em>None</em>) – The longitude and latitude limits of the interesting part of the
+<li><p><strong>box</strong> (<em>sequence</em><em> of </em><em>four numbers</em>) – The longitude and latitude limits of the interesting part of the
 data, in the format (lon_min, lon_max, lat_min, lat_max). Grid
-cells outside of this range will not be plotted.</p></li>
-<li><p><strong>ax</strong> (<em>Axes</em><em> | </em><em>None</em>) – The Matplotlib axis object onto which to draw the data (default is
+cells outse of this range will not be plotted.</p></li>
+<li><p><strong>ax</strong> (<em>Matplotlib axes object</em>) – The Matplotlib axis object onto which to draw the data (default is
 current axis).</p></li>
-<li><p><strong>**kwargs</strong> – These are passed “as is” to Matplotlib’s Polygon.</p></li>
+<li><p><strong>**kwarg</strong> – These are passed “as is” to Matplotlib’s Polygon.</p></li>
 </ul>
 </dd>
 </dl>
@@ -175,16 +168,16 @@ current axis).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">GenericDatasetAccessor.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-prename descclassname"><span class="pre">ds.</span></span><span class="sig-name descname"><span class="pre">plot_ugridded_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Plot given values as colored polygons on unstructured grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>values</strong> (<em>Iterable</em><em>[</em><em>NumType</em><em>]</em>) – The values to be plotted. There must be exactly as many values as
+<li><p><strong>values</strong> (<em>numpy.array</em>) – The values to be plotted. There must be exactly as many values as
 there are grids in the cell.</p></li>
-<li><p><strong>cmap</strong> (<em>colormap</em><em> | </em><em>None</em>) – The colormap to use (default is viridis).</p></li>
-<li><p><strong>vmin</strong> (<em>NumType</em><em> | </em><em>None</em>) – The minimum value to show on the color scale.</p></li>
-<li><p><strong>vmax</strong> (<em>NumType</em><em> | </em><em>None</em>) – The maximum value to show on the color scale.</p></li>
+<li><p><strong>cmap</strong> (<em>Matplotlib color map</em><em>, or </em><em>just its name</em>) – The colormap to use.</p></li>
+<li><p><strong>vmin</strong> (<em>numeric</em>) – The minimum value to show on the color scale.</p></li>
+<li><p><strong>vmax</strong> (<em>numeric</em>) – The maximum value to show on the color scale.</p></li>
 <li><p><strong>**kwargs</strong> – These are passed “as is” to self.plot_ugridded_colors.</p></li>
 </ul>
 </dd>
@@ -217,7 +210,7 @@ there are grids in the cell.</p></li>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/accessor_commons.rst.txt"
+      <li><a href="_sources/accessors_commons.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -250,7 +243,7 @@ there are grids in the cell.</p></li>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024-now, Institut des Géosciences de l&#39;Environnement, Grenoble, France. This documentation is licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

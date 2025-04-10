@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Basic usage &#8212; geomodeloutputs latest documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=310c80ee" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=0c472235" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=424f8d56" />
     <script src="_static/documentation_options.js?v=c6e86fd7"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Utility functions" href="accessor_commons.html" />
+    <link rel="next" title="Utility functions" href="accessors_commons.html" />
     <link rel="prev" title="Installation instructions" href="installation.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -30,7 +30,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="accessor_commons.html" title="Utility functions"
+          <a href="accessors_commons.html" title="Utility functions"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="installation.html" title="Installation instructions"
@@ -52,8 +52,8 @@
 <p>Imagine you ran an Elmer/Ice simulation over Greenland, and you want to make a map of the surface elevation at the end
 of the simulation (variable <code class="code docutils literal notranslate"><span class="pre">orog</span></code> in file <code class="code docutils literal notranslate"><span class="pre">output.nc</span></code>). Without geomodeloutputs, you might write a script
 like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;output.nc&quot;</span><span class="p">)</span>
 <span class="n">meshname</span> <span class="o">=</span> <span class="s2">&quot;greenland&quot;</span>
@@ -74,9 +74,9 @@ be usable with outputs of other Elmer/Ice simulations, if they have a different 
 </ul>
 </div></blockquote>
 <p>Using geomodeloutputs, you might write a script like this instead:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
-<span class="kn">import</span> <span class="nn">geomodeloutputs</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geomodeloutputs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;output.nc&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tripcolor</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">elmerice</span><span class="o">.</span><span class="n">triangulation</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;orog&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,:])</span>
@@ -153,7 +153,7 @@ example, <code class="code docutils literal notranslate"><span class="pre">ds.wi
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="accessor_commons.html"
+    <p class="topless"><a href="accessors_commons.html"
                           title="next chapter">Utility functions</a></p>
   </div>
   <div role="note" aria-label="source link">
@@ -184,7 +184,7 @@ example, <code class="code docutils literal notranslate"><span class="pre">ds.wi
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="accessor_commons.html" title="Utility functions"
+          <a href="accessors_commons.html" title="Utility functions"
              >next</a> |</li>
         <li class="right" >
           <a href="installation.html" title="Installation instructions"
@@ -195,7 +195,7 @@ example, <code class="code docutils literal notranslate"><span class="pre">ds.wi
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024-now, Institut des Géosciences de l&#39;Environnement, Grenoble, France. This documentation is licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

@@ -28,9 +28,7 @@
 
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
-from __future__ import annotations
 from abc import ABC
-from typing import Any, Sequence
 import itertools
 from datetime import datetime
 import numpy as np
@@ -42,22 +40,25 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 import cartopy
-from ._typing import NumType, ColorType, DateTypeStr, DateType
 from ._genutils import method_cacher
 from .graphics import units_mpl
 from .dateutils import datetime_plus_nmonths, CF_CALENDARTYPE_DEFAULT, \
                        CF_CALENDARTYPE_360DAYS
 
-def _preprocess_dataset(ds: xr.Dataset) -> xr.Dataset:
+def _preprocess_dataset(ds):
     """Preprocessing function to open non CF-compliant datasets.
+
+    This function exists to handle NetCDF files that use "months since..." time
+    units but a calendar that is not a 360-day calendar.
 
     Parameters
     ----------
-    ds
+    ds : xarray.Dataset
         The dataset opened with vanilla xarray.open_dataset.
 
     Returns
     -------
+    xarray.Dataset
         The processed dataset.
 
     """
@@ -82,35 +83,38 @@ def _preprocess_dataset(ds: xr.Dataset) -> xr.Dataset:
     else:
         return ds
 
-def open_dataset(filepath: str, **kwargs) -> xr.Dataset:
+def open_dataset(filepath, **kwargs):
     """Open dataset.
 
     This function acts as xarray.open_dataset, except that it can handle files
-    that have non CF-compliant time units, such as "months since ...".
+    that use "months since..." time units but a calendar that is not a 360-day
+    calendar.
 
     Parameters
     ----------
-    filepath
+    filepath : str
         The location of the file on disk.
     **kwargs
         These are passed "as is" to xarray.open_dataset.
 
     Returns
     -------
+    xarray.Dataset
         The opened dataset.
 
     """
     return _preprocess_dataset(xr.open_dataset(filepath, **kwargs))
 
-def open_mfdataset(filepath: str, **kwargs) -> xr.Dataset:
+def open_mfdataset(filepath, **kwargs):
     """Open multiple-file dataset.
 
     This function acts as xarray.open_mfdataset, except that it can handle
-    files that have non CF-compliant time units, such as "months since ...".
+    files that use "months since..." time units but a calendar that is not a
+    360-day calendar.
 
     Parameters
     ----------
-    filepath
+    filepath : str
         The location of the file(s) on disk. It can be any pattern accepted by
         xarray.open_mfdataset.
     **kwargs
@@ -119,6 +123,7 @@ def open_mfdataset(filepath: str, **kwargs) -> xr.Dataset:
 
     Returns
     -------
+    xarray.Dataset
         The opened dataset.
 
     Raises
@@ -134,18 +139,30 @@ def open_mfdataset(filepath: str, **kwargs) -> xr.Dataset:
     return xr.open_mfdataset(filepath, preprocess=_preprocess_dataset,
                              **kwargs)
 
-def transformer_from_crs_pyproj(crs_pyproj, reverse=False):
-    """Return the transformer corresponding to given pyproj CRS.
+def transformer_from_crs_pyproj(crs, reverse=False):
+    """Return the pyproj Transformer corresponding to given pyproj CRS.
 
-    The transformer is a function that transforms lon,lat to x,y (or the other
-    way around if reverse is True).
+    Parameters
+    ----------
+    crs_pyproj : pyproj.CRS
+        The pyproj CRS object that represents the projected coordinate system.
+    reverse : bool
+        The direction of the Transformer:
+         - False: from (lon,lat) to (x,y).
+         - True: from (x,y) to (lon,lat).
+
+    Returns
+    -------
+    pyproj.Transformer
+        An object that converts (lon,lat) to (x,y), or the other way around if
+        reverse is True.
 
     """
-    fr = crs_pyproj.geodetic_crs
-    to = crs_pyproj
+    fr = crs.geodetic_crs
+    to = crs
     if reverse:
         fr, to = to, fr
-    return pyproj.Transformer.from_crs(fr, to, always_xy=True).transform
+    return pyproj.Transformer.from_crs(fr, to, always_xy=True)
 
 def _unique_guess_in_iterable(guesses, iterable):
     """Return unique guess that is found in iterable, error otherwise."""
@@ -158,7 +175,7 @@ class GenericDatasetAccessor(ABC):
 
     """Template for all other xarray dataset accessors defined below."""
 
-    def __init__(self, dataset : xr.Dataset) -> None:
+    def __init__(self, dataset):
         self._dataset = dataset
         self._cache: dict[Any, Any] = dict()
 
@@ -180,7 +197,7 @@ class GenericDatasetAccessor(ABC):
     def close(self, *args, **kwargs):
         return self._dataset.close(*args, **kwargs)
 
-    def units_nice(self, varname: str) -> str:
+    def units_nice(self, varname):
         """Return units of given variable, in a predictible format.
 
         Predictable format:
@@ -195,11 +212,12 @@ class GenericDatasetAccessor(ABC):
 
         Parameters
         ----------
-        varname
+        varname : str
             The name of the variable in the NetCDF file.
 
         Returns
         -------
+        str
             The formatted units (or None for dimensionless variables).
 
         """
@@ -217,21 +235,16 @@ class GenericDatasetAccessor(ABC):
             pass
         return units
 
-    def check_units(
-            self,
-            varname: str,
-            expected: str,
-            nice: bool = True,
-    ) -> None:
+    def check_units(self, varname, expected, nice=True):
         """Make sure that units of given variable are as expected.
 
         Parameters
         ----------
-        varname
+        varname : str
             The name of the variable to check.
-        expected
+        expected : str
             The expected units.
-        nice
+        nice : bool
             Whether expected units are given as "nice" units
             (cf. method units_nice)
 
@@ -249,11 +262,11 @@ class GenericDatasetAccessor(ABC):
             raise ValueError('Bad units: expected "%s", got "%s"' %
                              (expected, actual))
 
-    def units_mpl(self, varname : str) -> str:
+    def units_mpl(self, varname):
         """Return the units of given variable, formatted for Matplotlib."""
         return units_mpl(self.units_nice(varname))
 
-    def vardesc(self, varname: str) -> str:
+    def vardesc(self, varname):
         """Return a (hopefully) human readable description of the variable."""
         for attr in ("long_name", "standard_name"):
             try:
@@ -263,16 +276,16 @@ class GenericDatasetAccessor(ABC):
         return varname
 
     @property
-    def dimname_time(self) -> str:
+    def dimname_time(self):
         """The name of the time dimension of the file."""
         return self._guess_dimname(("time_counter", "time"))
 
     @property
-    def ntimes(self) -> int:
+    def ntimes(self):
         """The number of time steps in the file."""
         return self.sizes[self.dimname_time]
 
-    def time_coord(self, varname: str) -> str:
+    def time_coord(self, varname):
         """Return the name of the time coordinate associated with variable."""
         # TODO: this method needs a better / safer implementation
         dim = self.dimname_time
@@ -288,22 +301,19 @@ class GenericDatasetAccessor(ABC):
             coord = "time%s" % coord
         return coord
 
-    def times(
-            self,
-            varname: str,
-            dtype: DateTypeStr = "datetime",
-    ) -> np.ndarray:
+    def times(self, varname, dtype="datetime"):
         """Return array of times corresponding to given variable.
 
         Parameters
         ----------
-        varname
+        varname : str
             The name of the variable of interest.
-        dtype
+        dtype : {"datetime", "pandas", "numpy" ,"xarray"}
             The data type of dates in the output.
 
         Returns
         -------
+        numpy.array
             A numpy array containging the dates.
 
         """
@@ -333,13 +343,13 @@ class GenericDatasetAccessor(ABC):
 
     def ll2xy(self, lon, lat):
         """Convert from (lon,lat) to (x,y)."""
-        f = transformer_from_crs_pyproj(self.crs_pyproj)
-        return f(lon, lat)
+        tr = transformer_from_crs_pyproj(self.crs_pyproj)
+        return tr.transform(lon, lat)
 
     def xy2ll(self, x, y):
         """Convert from (x,y) to (lon,lat)."""
-        f = transformer_from_crs_pyproj(self.crs_pyproj, reverse=True)
-        return f(x, y)
+        tr = transformer_from_crs_pyproj(self.crs_pyproj, reverse=True)
+        return tr.transform(x, y)
 
     def _guess_dimname(self, guesses):
         """Return name of only dimension in guesses that is found, or error."""
@@ -350,7 +360,7 @@ class GenericDatasetAccessor(ABC):
         return _unique_guess_in_iterable(guesses, self._dataset)
 
     @property
-    def dimname_ncells(self) -> str:
+    def dimname_ncells(self):
         """The name of the dimensions for the number of grid cells.
 
         This property makes sense for unstructured grids only.
@@ -359,7 +369,7 @@ class GenericDatasetAccessor(ABC):
         return self._guess_dimname(["cell", "cells", "cell_mesh"])
 
     @property
-    def ncells(self) -> int:
+    def ncells(self):
         """The number of cells in the grid.
 
         This property makes sense for unstructured grids only.
@@ -369,7 +379,7 @@ class GenericDatasetAccessor(ABC):
 
     @property
     @method_cacher
-    def varnames_lonlat(self) -> tuple[str, str]:
+    def varnames_lonlat(self):
         """The names of the longitude and latitude variables."""
         guesses_lon = ["lon", "lon_mesh"]
         lon_name = self._guess_varname(guesses_lon)
@@ -381,7 +391,7 @@ class GenericDatasetAccessor(ABC):
 
     @property
     @method_cacher
-    def varnames_lonlat_bounds(self) -> tuple[str, str]:
+    def varnames_lonlat_bounds(self):
         """The names of the lon/lat bound variables.
 
         This property only makes sense for unstructured grids. For these grids,
@@ -397,28 +407,22 @@ class GenericDatasetAccessor(ABC):
             raise ValueError("Inconsistent lon/lat bound variable names.")
         return lon_name, lat_name
 
-    def plot_ugridded_colors(
-            self,
-            colors: Sequence[ColorType],
-            box: tuple[NumType, NumType, NumType, NumType] | None = None,
-            ax: mpl.axes.Axes | None = None,
-            **kwargs
-        ) -> None:
+    def plot_ugridded_colors(self, colors, box=None, ax=None, **kwargs):
         """Plot given colors as colored polygons on unstructured grid.
 
         Parameters
         ----------
-        colors
+        colors : sequence of colors
             The face colors of the polygons. There must be exactly as many
             colors as there are cells in the grid.
-        box
+        box : sequence of four numbers
             The longitude and latitude limits of the interesting part of the
             data, in the format (lon_min, lon_max, lat_min, lat_max). Grid
-            cells outside of this range will not be plotted.
-        ax
+            cells outse of this range will not be plotted.
+        ax : Matplotlib axes object
             The Matplotlib axis object onto which to draw the data (default is
             current axis).
-        **kwargs
+        **kwarg
             These are passed "as is" to Matplotlib's Polygon.
 
         """
@@ -444,26 +448,20 @@ class GenericDatasetAccessor(ABC):
             ax.add_patch(Polygon(coords, transform=transform,
                                  fc=colors[i], **kwargs))
 
-    def plot_ugridded_values(
-            self,
-            values: np.ndarray,
-            cmap=None, #TODO: needs a type hint
-            vmin: NumType | None = None,
-            vmax: NumType | None = None,
-            **kwargs,
-        ) -> None:
+    def plot_ugridded_values(self, values, cmap="viridis",
+                             vmin=None, vmax=None, **kwargs):
         """Plot given values as colored polygons on unstructured grid.
 
         Parameters
         ----------
-        values
+        values : numpy.array
             The values to be plotted. There must be exactly as many values as
             there are grids in the cell.
-        cmap: colormap | None
-            The colormap to use (default is viridis).
-        vmin
+        cmap : Matplotlib color map, or just its name
+            The colormap to use.
+        vmin : numeric
             The minimum value to show on the color scale.
-        vmax
+        vmax : numeric
             The maximum value to show on the color scale.
         **kwargs
             These are passed "as is" to self.plot_ugridded_colors.
@@ -473,8 +471,8 @@ class GenericDatasetAccessor(ABC):
             vmin = values.min()
         if vmax is None:
             vmax = values.max()
-        if cmap is None:
-            cmap = mpl.colormaps["viridis"]
+        if isinstance(cmap, str):
+            cmap = mpl.colormaps[cmap]
         colors = cmap(np.interp(values, np.array([vmin, vmax]), [0, 1]))
         self.plot_ugridded_colors(colors, **kwargs)
 
@@ -631,7 +629,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 
     @property
     @method_cacher
-    def map_face_node(self) -> np.ndarray:
+    def map_face_node(self):
         """An array giving, for each face, the indices of its vertices.
 
         The indices are given in Python convention (ie. starting at 0).
@@ -650,16 +648,17 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
             raise ValueError("Negative start index.")
         return out
 
-    def node2face(self, values : np.ndarray) -> np.ndarray:
+    def node2face(self, values):
         """Convert given node values to face values.
 
         Parameters
         ----------
-        values
+        values : numpy.array
             The array of node values to convert.
 
         Returns
         -------
+        numpy.array
             The corresponding array of face values.
 
         """
