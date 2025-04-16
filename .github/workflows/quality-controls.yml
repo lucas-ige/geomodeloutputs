@@ -1,6 +1,6 @@
 name: quality controls
 run-name: run quality controls
-on: push
+on: [push, workflow_dispatch]
 jobs:
   Run-Quality-Controls:
     runs-on: ubuntu-latest
