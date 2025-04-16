@@ -1,13 +1,14 @@
 name: quality controls
 run-name: run quality controls
+on: push
 jobs:
   Run-Quality-Controls:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Platform: ${{ runner.os }}"
-      - run: echo "Repository: ${{ github.repository }}"
-      - run: echo "Branch: ${{ github.ref }}"
-      - run: echo "Job status: ${{ job.status }}"
+      - run: echo "Platform is ${{ runner.os }}"
+      - run: echo "Repository is ${{ github.repository }}"
+      - run: echo "Branch is ${{ github.ref }}"
+      - run: echo "Job status is ${{ job.status }}"
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
