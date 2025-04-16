@@ -5,17 +5,24 @@ jobs:
   Run-Quality-Controls:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Platform is ${{ runner.os }}"
-      - run: echo "Repository is ${{ github.repository }}"
-      - run: echo "Branch is ${{ github.ref }}"
-      - uses: actions/checkout@v4
+      - name: Print information about the run
+        run: |
+          echo "Platform is ${{ runner.os }}"
+          echo "Repository is ${{ github.repository }}"
+          echo "Branch is ${{ github.ref }}"
+      - name: Clone repository
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - name: Prepare Python environment
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements.txt
-      - run: pip install pytest
-      - run: pytest ${{ github.workspace }}/tests
-      - run: echo "Job status is ${{ job.status }}"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Run unit tests
+        run: pytest ${{ github.workspace }}/tests
+      - name: Print concluding information
+        run: echo "Job status is ${{ job.status }}"
