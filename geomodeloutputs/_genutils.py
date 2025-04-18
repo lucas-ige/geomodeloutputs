@@ -1,36 +1,17 @@
-"""Module geomodeloutputs: easily use files that are geoscience model outputs.
+# Copyright (c) 2024-now, Institut des Géosciences de l'Environnement, France.
+#
+# License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
-Copyright (2024-now) Institut des Géosciences de l'Environnement (IGE), France.
-
-This software is released under the terms of the BSD 3-clause license:
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    (1) Redistributions of source code must retain the above copyright notice,
-    this list of conditions and the following disclaimer.
-
-    (2) Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
-
-    (3) The name of the author may not be used to endorse or promote products
-    derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-OF SUCH DAMAGE.
-
-"""
+"""Module geomodeloutputs: generic utilities."""
 
 import functools
+from datetime import datetime
+import xarray as xr
+from .dateutils import (
+    datetime_plus_nmonths,
+    CF_CALENDARTYPE_DEFAULT,
+    CF_CALENDARTYPE_360DAYS,
+)
 
 def keyify_arg(arg):
     """Return unique key representing given argument."""
@@ -61,3 +42,97 @@ def method_cacher(method):
             answer = args[0]._cache[key] = method(*args, **kwargs)
         return answer
     return wrapper
+
+def preprocess_dataset(ds):
+    """Preprocessing function to open non CF-compliant datasets.
+
+    This function exists to handle NetCDF files that use "months since..." time
+    units but a calendar that is not a 360-day calendar.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset opened with vanilla xarray.open_dataset.
+
+    Returns
+    -------
+    xarray.Dataset
+        The processed dataset.
+
+    """
+    units = ds["time"].attrs["units"]
+    if units.startswith("MONTHS since "):
+        f = "%Y-%m-%d %H:%M:%S"
+        if len(units) == 18 and units.endswith(":0"):
+            units += "0"
+        start = datetime.strptime(units[13:], f)
+        try:
+            calendar = ds["time"].attrs["calendar"]
+        except KeyError:
+            calendar = CF_CALENDARTYPE_DEFAULT
+        if calendar in CF_CALENDARTYPE_360DAYS:
+            raise ValueError('This function is meant to deal with "months '
+                             'since" time data with calendars other than '
+                             '360-day calendars.')
+        convert = lambda t: datetime_plus_nmonths(start, t, calendar)
+        convert_all = np.vectorize(convert)
+        out = ds.assign_coords(time=convert_all(ds["time"].values))
+        return out
+    else:
+        return ds
+
+def open_dataset(filepath, **kwargs):
+    """Open dataset.
+
+    This function acts as xarray.open_dataset, except that it can handle files
+    that use "months since..." time units but a calendar that is not a 360-day
+    calendar.
+
+    Parameters
+    ----------
+    filepath : str
+        The location of the file on disk.
+    **kwargs
+        These are passed "as is" to xarray.open_dataset.
+
+    Returns
+    -------
+    xarray.Dataset
+        The opened dataset.
+
+    """
+    return preprocess_dataset(xr.open_dataset(filepath, **kwargs))
+
+def open_mfdataset(filepath, **kwargs):
+    """Open multiple-file dataset.
+
+    This function acts as xarray.open_mfdataset, except that it can handle
+    files that use "months since..." time units but a calendar that is not a
+    360-day calendar.
+
+    Parameters
+    ----------
+    filepath : str
+        The location of the file(s) on disk. It can be any pattern accepted by
+        xarray.open_mfdataset.
+    **kwargs
+        These are passed "as is" to xarray.open_dataset, with one exception:
+        named argument "preprocess" is not allowed here.
+
+    Returns
+    -------
+    xarray.Dataset
+        The opened dataset.
+
+    Raises
+    ------
+    ValueError
+        If "preprocess" is present as a named argument.
+
+    """
+    if "preprocess" in kwargs:
+        raise ValueError(
+            "This wrapper around xarray.open_mfdataset does not accept "
+            '"preprocess" as a keyword argument.'
+        )
+    return xr.open_mfdataset(filepath, preprocess=preprocess_dataset, **kwargs)
