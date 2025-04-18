@@ -23,6 +23,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
+      - name: Configure the environment so that the package can be imported
+        run: export PYTHONPATH=$PYTHONPATH:${{ github.repository }}
       - name: Run unit tests
         run: pytest ${{ github.workspace }}/tests
       - name: Print concluding information
