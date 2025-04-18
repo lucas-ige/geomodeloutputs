@@ -6,6 +6,7 @@
 
 import functools
 from datetime import datetime
+import pyproj
 import xarray as xr
 from .dateutils import (
     datetime_plus_nmonths,
@@ -42,6 +43,13 @@ def method_cacher(method):
             answer = args[0]._cache[key] = method(*args, **kwargs)
         return answer
     return wrapper
+
+def unique_guess_in_iterable(guesses, iterable):
+    """Return unique guess that is found in iterable, error otherwise."""
+    found = [guess in iterable for guess in guesses]
+    if sum(found) != 1:
+        raise ValueError("Zero or more than one guess(es) is in iterable.")
+    return guesses[found.index(True)]
 
 def preprocess_dataset(ds):
     """Preprocessing function to open non CF-compliant datasets.
@@ -136,3 +144,28 @@ def open_mfdataset(filepath, **kwargs):
             '"preprocess" as a keyword argument.'
         )
     return xr.open_mfdataset(filepath, preprocess=preprocess_dataset, **kwargs)
+
+def transformer_from_crs(crs, reverse=False):
+    """Return the pyproj Transformer corresponding to given CRS.
+
+    Parameters
+    ----------
+    crs : pyproj.CRS
+        The CRS object that represents the projected coordinate system.
+    reverse : bool
+        The direction of the Transformer:
+         - False: from (lon,lat) to (x,y).
+         - True: from (x,y) to (lon,lat).
+
+    Returns
+    -------
+    pyproj.Transformer
+        An object that converts (lon,lat) to (x,y), or the other way around if
+        reverse is True.
+
+    """
+    fr = crs.geodetic_crs
+    to = crs
+    if reverse:
+        fr, to = to, fr
+    return pyproj.Transformer.from_crs(fr, to, always_xy=True)

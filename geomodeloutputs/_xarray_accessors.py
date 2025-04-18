@@ -16,40 +16,12 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.tri import Triangulation
 import cartopy
-from ._genutils import method_cacher
+from ._genutils import (
+    method_cacher,
+    unique_guess_in_iterable,
+    transformer_from_crs,
+)
 from .graphics import units_mpl
-
-def transformer_from_crs(crs, reverse=False):
-    """Return the pyproj Transformer corresponding to given CRS.
-
-    Parameters
-    ----------
-    crs : pyproj.CRS
-        The CRS object that represents the projected coordinate system.
-    reverse : bool
-        The direction of the Transformer:
-         - False: from (lon,lat) to (x,y).
-         - True: from (x,y) to (lon,lat).
-
-    Returns
-    -------
-    pyproj.Transformer
-        An object that converts (lon,lat) to (x,y), or the other way around if
-        reverse is True.
-
-    """
-    fr = crs.geodetic_crs
-    to = crs
-    if reverse:
-        fr, to = to, fr
-    return pyproj.Transformer.from_crs(fr, to, always_xy=True)
-
-def _unique_guess_in_iterable(guesses, iterable):
-    """Return unique guess that is found in iterable, error otherwise."""
-    found = [guess in iterable for guess in guesses]
-    if sum(found) != 1:
-        raise ValueError("Zero or more than one guess(es) is in iterable.")
-    return guesses[found.index(True)]
 
 class GenericDatasetAccessor(ABC):
 
@@ -233,11 +205,11 @@ class GenericDatasetAccessor(ABC):
 
     def _guess_dimname(self, guesses):
         """Return name of only dimension in guesses that is found, or error."""
-        return _unique_guess_in_iterable(guesses, self.dims)
+        return unique_guess_in_iterable(guesses, self.dims)
 
     def _guess_varname(self, guesses):
         """Return name of only variable in guesses that is found, or error."""
-        return _unique_guess_in_iterable(guesses, self._dataset)
+        return unique_guess_in_iterable(guesses, self._dataset)
 
     @property
     def dimname_ncells(self):
