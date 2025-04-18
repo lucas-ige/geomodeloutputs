@@ -1,30 +1,6 @@
-# Copyright (2024-now) Institut des Géosciences de l'Environnement, France.
+# Copyright (c) 2024-now, Institut des Géosciences de l'Environnement, France.
 #
-# This software is released under the terms of the BSD 3-clause license:
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#     (1) Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#
-#     (2) Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#
-#     (3) The name of the author may not be used to endorse or promote products
-#     derived from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
@@ -139,13 +115,13 @@ def open_mfdataset(filepath, **kwargs):
     return xr.open_mfdataset(filepath, preprocess=_preprocess_dataset,
                              **kwargs)
 
-def transformer_from_crs_pyproj(crs, reverse=False):
-    """Return the pyproj Transformer corresponding to given pyproj CRS.
+def transformer_from_crs(crs, reverse=False):
+    """Return the pyproj Transformer corresponding to given CRS.
 
     Parameters
     ----------
-    crs_pyproj : pyproj.CRS
-        The pyproj CRS object that represents the projected coordinate system.
+    crs : pyproj.CRS
+        The CRS object that represents the projected coordinate system.
     reverse : bool
         The direction of the Transformer:
          - False: from (lon,lat) to (x,y).
@@ -177,7 +153,7 @@ class GenericDatasetAccessor(ABC):
 
     def __init__(self, dataset):
         self._dataset = dataset
-        self._cache: dict[Any, Any] = dict()
+        self._cache = dict()
 
     def __getitem__(self, *args, **kwargs):
         return self._dataset.__getitem__(*args, **kwargs)
@@ -343,12 +319,12 @@ class GenericDatasetAccessor(ABC):
 
     def ll2xy(self, lon, lat):
         """Convert from (lon,lat) to (x,y)."""
-        tr = transformer_from_crs_pyproj(self.crs_pyproj)
+        tr = transformer_from_crs(self.crs)
         return tr.transform(lon, lat)
 
     def xy2ll(self, x, y):
         """Convert from (x,y) to (lon,lat)."""
-        tr = transformer_from_crs_pyproj(self.crs_pyproj, reverse=True)
+        tr = transformer_from_crs(self.crs, reverse=True)
         return tr.transform(x, y)
 
     def _guess_dimname(self, guesses):
@@ -399,7 +375,8 @@ class GenericDatasetAccessor(ABC):
         contain the coordinates of the vertices of each cell.
 
         """
-        guesses_lon = ["lon_bnds", "bounds_lon", "lon_mesh_bnds"]
+        guesses_lon = ["lon_bnds", "lon_mesh_bnds",
+                       "bounds_lon", "bounds_lon_mesh"]
         lon_name = self._guess_varname(guesses_lon)
         guesses_lat = [s.replace("lon", "lat") for s in guesses_lon]
         lat_name = self._guess_varname(guesses_lat)
@@ -504,19 +481,31 @@ class WizardDatasetAccessor(GenericDatasetAccessor):
     @property
     @method_cacher
     def myself(self):
-        """Return reference to named accessor corresponding to self."""
+        """The reference to named accessor corresponding to self."""
         return getattr(self._dataset, self.whoami)
 
     @property
     @method_cacher
     def crs_pyproj(self):
-        """Return the CRS (pyproj) corresponding to dataset."""
+        """The CRS (pyproj) corresponding to the dataset."""
         return self.myself.crs_pyproj
 
     @property
     @method_cacher
     def crs_cartopy(self):
-        """Return the CRS (cartopy) corresponding to dataset."""
+        """The CRS (cartopy) corresponding to the dataset."""
+        return self.myself.crs_cartopy
+
+    @property
+    @method_cacher
+    def crs(self):
+        """The CRS corresponding to the dataset.
+
+        We choose here to return the cartopy CRS rather than the pyproj CRS
+        because the cartopy CRS is a subclass of the pyproj CRS, so it
+        potentially has additional functionalily.
+
+        """
         return self.myself.crs_cartopy
 
     def time_coord(self, varname):
