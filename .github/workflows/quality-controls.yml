@@ -5,11 +5,6 @@ jobs:
   Run-Quality-Controls:
     runs-on: ubuntu-latest
     steps:
-      - name: Print information about the run
-        run: |
-          echo "Platform is ${{ runner.os }}"
-          echo "Repository is ${{ github.repository }}"
-          echo "Branch is ${{ github.ref }}"
       - name: Clone repository
         uses: actions/checkout@v4
         with:
@@ -22,8 +17,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
+      - name: Run linter
+        run: |
+          pip install black
+          black --check --diff --color ${{ github.workspace }}/geomodeloutputs
+          black --check --diff --color ${{ github.workspace }}/tests/test_*
       - name: Run unit tests
-        run: pytest ${{ github.workspace }}/tests
-      - name: Print concluding information
-        run: echo "Job status is ${{ job.status }}"
+        run: |
+          pip install pytest
+          pytest ${{ github.workspace }}/tests
