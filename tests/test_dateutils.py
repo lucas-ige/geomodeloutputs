@@ -29,7 +29,11 @@
 """Module geomodeloutputs: tests for dateutils submodule."""
 
 from datetime import datetime
-from dateutils import ndays_in_year, ndays_in_month, datetime_plus_nmonths
+from geomodeloutputs.dateutils import (
+    ndays_in_year,
+    ndays_in_month,
+    datetime_plus_nmonths,
+)
 
 def test_ndays_in_year():
     # Non-leap year (test all calendars)
