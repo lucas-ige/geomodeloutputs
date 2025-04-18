@@ -12,6 +12,7 @@ import cartopy
 from ._genutils import method_cacher
 from ._accessors_generic import GenericDatasetAccessor
 
+
 @xr.register_dataset_accessor("elmerice")
 class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 
@@ -49,10 +50,12 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         """Return the CRS (cartopy) corresponding to the file."""
         if self.epsg == 3031:
             return cartopy.crs.SouthPolarStereo(
-                central_longitude=0, true_scale_latitude=-71)
+                central_longitude=0, true_scale_latitude=-71
+            )
         elif self.epsg == 3413:
             return cartopy.crs.NorthPolarStereo(
-                central_longitude=-45, true_scale_latitude=70)
+                central_longitude=-45, true_scale_latitude=70
+            )
         else:
             raise ValueError("Unsupported projection: %d." % self.epsg)
 
@@ -61,8 +64,11 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
     def meshname(self):
         """Return the name of the mesh (or None if it cannot be guessed)."""
         dims = self.sizes.keys()
-        candidates = [d for d in dims if len(d) > 6 and
-                      d.startswith("n") and d.endswith("_edge")]
+        candidates = [
+            d
+            for d in dims
+            if len(d) > 6 and d.startswith("n") and d.endswith("_edge")
+        ]
         if len(candidates) != 1:
             return None
         meshname = candidates[0][1:-5]
@@ -112,9 +118,10 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
     def triangulation(self):
         """Return Triangulation object corresponding to data."""
         return Triangulation(
-            self["x"].values[0,:],
-            self["y"].values[0,:],
-            self[self.meshname + "_face_nodes"].values)
+            self["x"].values[0, :],
+            self["y"].values[0, :],
+            self[self.meshname + "_face_nodes"].values,
+        )
 
     @property
     @method_cacher
@@ -156,6 +163,6 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         map_ = self.map_face_node
         out = np.zeros(map_.shape[0])
         for i in range(len(out)):
-            nodevals = [values[v] for v in map_[i,:]]
+            nodevals = [values[v] for v in map_[i, :]]
             out[i] = sum(nodevals) / len(nodevals)
         return out

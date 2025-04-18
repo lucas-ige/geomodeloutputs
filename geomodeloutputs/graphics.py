@@ -20,9 +20,11 @@ preset_crs = {
     ),
 }
 
-_PrepareFigResult = namedtuple("_PrepareFig", "wfig, hfig nw nh w h left "
-                               "right bottom top wsep hsep lims rescale crs "
-                               "coastlines fig axes")
+_PrepareFigResult = namedtuple(
+    "_PrepareFig",
+    "wfig, hfig nw nh w h left right bottom top wsep hsep lims rescale crs "
+    "coastlines fig axes",
+)
 
 
 def prepare_fig(
@@ -95,12 +97,12 @@ def prepare_fig(
     if rescale or rescale is None and crs is not None and lims is not None:
         if lims is None:
             raise ValueError("Need explicit limits to rescale.")
-        h = w * (lims[3]-lims[2]) / (lims[1]-lims[0])
-    wfig = left + w*nw + wsep*(nw-1) + right
-    hfig = bottom + h*nh + hsep*(nh-1) + top
+        h = w * (lims[3] - lims[2]) / (lims[1] - lims[0])
+    wfig = left + w * nw + wsep * (nw - 1) + right
+    hfig = bottom + h * nh + hsep * (nh - 1) + top
     fig = plt.figure(figsize=(wfig, hfig))
     axes = [[None for j in range(nw)] for i in range(nh)]
-    position = [None, 1-(top+h)/hfig, w/wfig, h/hfig]
+    position = [None, 1 - (top + h) / hfig, w / wfig, h / hfig]
     for i in range(nh):
         position[0] = left / wfig
         for j in range(nw):
@@ -113,9 +115,26 @@ def prepare_fig(
             position[0] += (w + wsep) / wfig
         position[1] -= (h + hsep) / hfig
     plt.sca(axes[0][0])
-    return _PrepareFigResult(wfig, hfig, nw, nh, w, h, left, right, bottom,
-                             top, wsep, hsep, lims, rescale, crs, coastlines,
-                             fig, np.array(axes))
+    return _PrepareFigResult(
+        wfig,
+        hfig,
+        nw,
+        nh,
+        w,
+        h,
+        left,
+        right,
+        bottom,
+        top,
+        wsep,
+        hsep,
+        lims,
+        rescale,
+        crs,
+        coastlines,
+        fig,
+        np.array(axes),
+    )
 
 
 def units_mpl(units):
@@ -135,10 +154,10 @@ def units_mpl(units):
     split = units.split()
     for i, s in enumerate(split):
         n = len(s) - 1
-        while (n >= 0 and s[n] in "-0123456789"):
+        while n >= 0 and s[n] in "-0123456789":
             n -= 1
         if n < 0:
             raise ValueError("Could not process units.")
         if n != len(s):
-            split[i] = "%s$^{%s}$" % (s[:n+1], s[n+1:])
+            split[i] = "%s$^{%s}$" % (s[: n + 1], s[n + 1 :])
     return " ".join(split)

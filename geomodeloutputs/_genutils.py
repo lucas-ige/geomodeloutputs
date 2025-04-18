@@ -7,12 +7,14 @@
 import functools
 from datetime import datetime
 import pyproj
+import numpy as np
 import xarray as xr
 from .dateutils import (
     datetime_plus_nmonths,
     CF_CALENDARTYPE_DEFAULT,
     CF_CALENDARTYPE_360DAYS,
 )
+
 
 def keyify_arg(arg):
     """Return unique key representing given argument."""
@@ -21,10 +23,14 @@ def keyify_arg(arg):
     else:
         raise TypeError("I cannot keyify argument of type %s." % type(arg))
 
+
 def keyify_args(*args, **kwargs):
     """Return a unique key representing all given arguments."""
-    return (tuple(keyify_arg(a) for a in args),
-            tuple((k, keyify_arg(v)) for k,v in kwargs.items()))
+    return (
+        tuple(keyify_arg(a) for a in args),
+        tuple((k, keyify_arg(v)) for k, v in kwargs.items()),
+    )
+
 
 def method_cacher(method):
     """Decorator that adds a cache functionality to class methods.
@@ -34,6 +40,7 @@ def method_cacher(method):
     functionality.
 
     """
+
     @functools.wraps(method)
     def wrapper(*args, **kwargs):
         key = (method.__name__, keyify_args(*args[1:], **kwargs))
@@ -42,7 +49,9 @@ def method_cacher(method):
         except KeyError:
             answer = args[0]._cache[key] = method(*args, **kwargs)
         return answer
+
     return wrapper
+
 
 def unique_guess_in_iterable(guesses, iterable):
     """Return unique guess that is found in iterable, error otherwise."""
@@ -50,6 +59,7 @@ def unique_guess_in_iterable(guesses, iterable):
     if sum(found) != 1:
         raise ValueError("Zero or more than one guess(es) is in iterable.")
     return guesses[found.index(True)]
+
 
 def preprocess_dataset(ds):
     """Preprocessing function to open non CF-compliant datasets.
@@ -79,15 +89,17 @@ def preprocess_dataset(ds):
         except KeyError:
             calendar = CF_CALENDARTYPE_DEFAULT
         if calendar in CF_CALENDARTYPE_360DAYS:
-            raise ValueError('This function is meant to deal with "months '
-                             'since" time data with calendars other than '
-                             '360-day calendars.')
+            raise ValueError(
+                'This function is meant to deal with "months since" time data '
+                'with calendars other than "360-day calendars."'
+            )
         convert = lambda t: datetime_plus_nmonths(start, t, calendar)
         convert_all = np.vectorize(convert)
         out = ds.assign_coords(time=convert_all(ds["time"].values))
         return out
     else:
         return ds
+
 
 def open_dataset(filepath, **kwargs):
     """Open dataset.
@@ -110,6 +122,7 @@ def open_dataset(filepath, **kwargs):
 
     """
     return preprocess_dataset(xr.open_dataset(filepath, **kwargs))
+
 
 def open_mfdataset(filepath, **kwargs):
     """Open multiple-file dataset.
@@ -144,6 +157,7 @@ def open_mfdataset(filepath, **kwargs):
             '"preprocess" as a keyword argument.'
         )
     return xr.open_mfdataset(filepath, preprocess=preprocess_dataset, **kwargs)
+
 
 def transformer_from_crs(crs, reverse=False):
     """Return the pyproj Transformer corresponding to given CRS.

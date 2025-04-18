@@ -11,11 +11,14 @@ CF_CALENDARTYPE_GREGORIAN = ("gregorian", "standard")
 CF_CALENDARTYPE_NOLEAP = ("noleap", "365_day")
 CF_CALENDARTYPE_ALLLEAP = ("all_leap", "366_day")
 CF_CALENDARTYPE_360DAYS = ("360_day",)
-CF_CALENDARTYPE_ALL = (CF_CALENDARTYPE_GREGORIAN +
-                       CF_CALENDARTYPE_NOLEAP +
-                       CF_CALENDARTYPE_ALLLEAP +
-                       CF_CALENDARTYPE_360DAYS)
+CF_CALENDARTYPE_ALL = (
+    CF_CALENDARTYPE_GREGORIAN
+    + CF_CALENDARTYPE_NOLEAP
+    + CF_CALENDARTYPE_ALLLEAP
+    + CF_CALENDARTYPE_360DAYS
+)
 CF_CALENDARTYPE_DEFAULT = "gregorian"
+
 
 def ndays_in_year(year, calendar=CF_CALENDARTYPE_DEFAULT):
     """Return the number of days in given year according to given calendar.
@@ -42,6 +45,7 @@ def ndays_in_year(year, calendar=CF_CALENDARTYPE_DEFAULT):
     elif calendar in CF_CALENDARTYPE_GREGORIAN:
         return int(datetime(year, 12, 31).strftime("%j"))
     raise ValueError("Invalid calendar value: %s." % calendar)
+
 
 def ndays_in_month(year, month, calendar=CF_CALENDARTYPE_DEFAULT):
     """Return the number of days in given month according to given calendar.
@@ -75,6 +79,7 @@ def ndays_in_month(year, month, calendar=CF_CALENDARTYPE_DEFAULT):
             year += 1
             month = 1
         return (datetime(year, month, 1) - timedelta(days=1)).day
+
 
 def datetime_plus_nmonths(start, nmonths, calendar=CF_CALENDARTYPE_DEFAULT):
     """Return (start + nmonths).
@@ -119,4 +124,4 @@ def datetime_plus_nmonths(start, nmonths, calendar=CF_CALENDARTYPE_DEFAULT):
     dhsm = start.strftime("-%d %H:%M:%S")
     out = datetime.strptime(yearmonth + dhsm, "%Y-%m-%d %H:%M:%S")
     oneday = timedelta(days=1)
-    return out + r*ndays_in_month(year, month, calendar=calendar)*oneday
+    return out + r * ndays_in_month(year, month, calendar=calendar) * oneday

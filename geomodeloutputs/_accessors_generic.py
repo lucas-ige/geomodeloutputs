@@ -20,8 +20,8 @@ from ._genutils import (
 )
 from .graphics import units_mpl
 
-class GenericDatasetAccessor(ABC):
 
+class GenericDatasetAccessor(ABC):
     """Template for all other xarray dataset accessors defined below."""
 
     def __init__(self, dataset):
@@ -108,8 +108,9 @@ class GenericDatasetAccessor(ABC):
         else:
             actual = self[varname].attrs["units"]
         if actual != expected:
-            raise ValueError('Bad units: expected "%s", got "%s"' %
-                             (expected, actual))
+            raise ValueError(
+                'Bad units: expected "%s", got "%s"' % (expected, actual)
+            )
 
     def units_mpl(self, varname):
         """Return the units of given variable, formatted for Matplotlib."""
@@ -169,8 +170,10 @@ class GenericDatasetAccessor(ABC):
         values = self[self.time_coord(varname)]
         if dtype == "datetime":
             f = "%Y-%m-%d %H-%M-%S %f"
+
             def convert(t):
                 return datetime.strptime(pd.to_datetime(t).strftime(f), f)
+
             values = np.vectorize(convert)(values.values)
         elif dtype == "pandas":
             values = pd.to_datetime(values.values)
@@ -248,8 +251,12 @@ class GenericDatasetAccessor(ABC):
         contain the coordinates of the vertices of each cell.
 
         """
-        guesses_lon = ["lon_bnds", "lon_mesh_bnds",
-                       "bounds_lon", "bounds_lon_mesh"]
+        guesses_lon = [
+            "lon_bnds",
+            "lon_mesh_bnds",
+            "bounds_lon",
+            "bounds_lon_mesh",
+        ]
         lon_name = self._guess_varname(guesses_lon)
         guesses_lat = [s.replace("lon", "lat") for s in guesses_lon]
         lat_name = self._guess_varname(guesses_lat)
@@ -283,23 +290,29 @@ class GenericDatasetAccessor(ABC):
         if box is not None:
             lon = self[self.varnames_lonlat[0]].values
             lat = self[self.varnames_lonlat[1]].values
-            idx = (lon >= box[0]) * (lon <= box[1]) * \
-                  (lat >= box[2]) * (lat <= box[3])
+            idx = (
+                (lon >= box[0])
+                * (lon <= box[1])
+                * (lat >= box[2])
+                * (lat <= box[3])
+            )
             idx = np.array(range(self.ncells))[idx]
         else:
             idx = range(self.ncells)
         transform = cartopy.crs.PlateCarree()
         for i in idx:
-            coords = np.array(list(zip(lon_bnds[i,:], lat_bnds[i,:])))
-            if coords[:,0].min() < -100 and coords[:,0].max() > 100:
+            coords = np.array(list(zip(lon_bnds[i, :], lat_bnds[i, :])))
+            if coords[:, 0].min() < -100 and coords[:, 0].max() > 100:
                 # These cells are annoying to plot so we skip them (for now)
                 # TODO: fix this
                 continue
-            ax.add_patch(Polygon(coords, transform=transform,
-                                 fc=colors[i], **kwargs))
+            ax.add_patch(
+                Polygon(coords, transform=transform, fc=colors[i], **kwargs)
+            )
 
-    def plot_ugridded_values(self, values, cmap="viridis",
-                             vmin=None, vmax=None, **kwargs):
+    def plot_ugridded_values(
+        self, values, cmap="viridis", vmin=None, vmax=None, **kwargs
+    ):
         """Plot given values as colored polygons on unstructured grid.
 
         Parameters
@@ -325,6 +338,7 @@ class GenericDatasetAccessor(ABC):
             cmap = mpl.colormaps[cmap]
         colors = cmap(np.interp(values, np.array([vmin, vmax]), [0, 1]))
         self.plot_ugridded_colors(colors, **kwargs)
+
 
 @xr.register_dataset_accessor("wizard")
 class WizardDatasetAccessor(GenericDatasetAccessor):

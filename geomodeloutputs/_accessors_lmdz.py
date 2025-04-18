@@ -12,6 +12,7 @@ import cartopy
 from ._genutils import method_cacher
 from ._accessors_generic import GenericDatasetAccessor
 
+
 @xr.register_dataset_accessor("lmdz")
 class LMDzDatasetAccessor(GenericDatasetAccessor):
 
@@ -48,10 +49,10 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
         nlon, nlat = lon.size, lat.size
         geod = pyproj.Geod(ellps="WGS84")
         out = np.full([nlat, nlon], np.nan)
-        for i, j in itertools.product(range(1, nlat-1), range(1, nlon-1)):
-            lons = (lon[j-1], lon[j], lon[j], lon[j-1])
-            lats = (lat[i-1], lat[i-1], lat[i], lat[i])
-            out[i,j] = geod.polygon_area_perimeter(lons, lats)[0]
+        for i, j in itertools.product(range(1, nlat - 1), range(1, nlon - 1)):
+            lons = (lon[j - 1], lon[j], lon[j], lon[j - 1])
+            lats = (lat[i - 1], lat[i - 1], lat[i], lat[i])
+            out[i, j] = geod.polygon_area_perimeter(lons, lats)[0]
         return out
 
     @property
@@ -60,11 +61,19 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
         """Return the type of grid: "reg" (lat/lon) or "ico" (dynamico)."""
         dims = ("lon", "lat", "cell", "nvertex")
         dims = dict((d, d in self.dims) for d in dims)
-        if (dims["lon"] and dims["lat"] and
-            not dims["cell"] and not dims["nvertex"]):
+        if (
+            dims["lon"]
+            and dims["lat"]
+            and not dims["cell"]
+            and not dims["nvertex"]
+        ):
             return "reg"
-        elif (not dims["lon"] and not dims["lat"] and
-              dims["cell"] and dims["nvertex"]):
+        elif (
+            not dims["lon"]
+            and not dims["lat"]
+            and dims["cell"]
+            and dims["nvertex"]
+        ):
             return "ico"
         else:
             raise ValueError("Cannot guess LMDz grid type.")
