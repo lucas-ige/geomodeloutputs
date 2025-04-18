@@ -1,43 +1,13 @@
-"""Module geomodeloutputs: easily use files that are geoscience model outputs.
+# Copyright (c) 2024-now, Institut des Géosciences de l'Environnement, France.
+#
+# License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
-Copyright (2025-now) Institut des Géosciences de l'Environnement (IGE), France.
-
-This software is released under the terms of the BSD 3-clause license:
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    (1) Redistributions of source code must retain the above copyright notice,
-    this list of conditions and the following disclaimer.
-
-    (2) Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
-
-    (3) The name of the author may not be used to endorse or promote products
-    derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-OF SUCH DAMAGE.
-
-"""
+"""Module geomodeloutputs: utilities for plotting model outputs."""
 
 from collections import namedtuple
 import numpy as np
 import matplotlib.pyplot as plt
 import cartopy
-
-_PrepareFig = namedtuple("_PrepareFig", "wfig, hfig nw nh w h left right "
-                         "bottom top wsep hsep lims rescale crs coastlines "
-                         "fig axes")
 
 preset_lims = {
     "greenland": (-750000, 920000, -3460000, -533000),
@@ -50,30 +20,82 @@ preset_crs = {
     ),
 }
 
+_PrepareFigResult = namedtuple("_PrepareFig", "wfig, hfig nw nh w h left "
+                               "right bottom top wsep hsep lims rescale crs "
+                               "coastlines fig axes")
+
+
 def prepare_fig(
-        nw = 1,
-        nh = 1,
-        w = 3,
-        h = 4 / (1 + 5**0.5) * 2,
-        left = 0.1,
-        right = 0.1,
-        bottom = 0.1,
-        top = 0.1,
-        wsep = 0.1,
-        hsep = 0.1,
-        crs = None,
-        lims = None,
-        rescale = None,
-        coastlines = None,
+    nw=1,
+    nh=1,
+    w=3,
+    h=4 / (1 + 5**0.5) * 2,
+    left=0.1,
+    right=0.1,
+    bottom=0.1,
+    top=0.1,
+    wsep=0.1,
+    hsep=0.1,
+    crs=None,
+    lims=None,
+    rescale=None,
+    coastlines=None,
 ):
-    """Create and return the figure and all the subplots."""
-    proj = preset_crs[crs] if isinstance(crs, str) else crs
-    if lims is not None:
-        limits = preset_lims[lims] if isinstance(lims, str) else lims
+    """Create and return a figure and its grid of subplots.
+
+    Parameters:
+    -----------
+    nw : int
+        The number of subplots along the width.
+    nh : int
+        The number of subplots along the height.
+    w : numeric
+        The width of each subplot, in inches.
+    h : numeric
+        The height of each subplot, in inches.
+    left : numeric
+        The left margin, in inches.
+    right : numeric
+        The right margin, in inches.
+    bottom : numeric
+        The bottom margin, in inches.
+    top : numeric
+        The top margin, in inches.
+    wsep : numeric
+        The horizontal separation between subplots, in inches.
+    hsep : numeric
+        The vertical separation between subplots, in inches.
+    crs : None | str | pyproj.CRS
+        The coordinate system used in the subplots. Can be specified as a
+        string literal corresponding to one of the presets (eg. `"greenland"`).
+    lims : None | str | [numeric, numeric, numeric, numeric]
+        The x and y limits of the subplot, as [xmin, xmax, ymin, ymax]. Can be
+        specified as a string literal corresponding to one of the presets
+        (eg. `"greenland"`).
+    rescale : None | bool
+        Whether to rescale the height of subplots so that a distance of 1 on
+        the y-axis is equal to a distance of 1 on the x-axis. If both `crs` and
+        `lims` are not `None` (ie. the plot is a map), then rescaling happens
+        no matter the value of this parameter.
+    coastlines: None | dict
+        Keyword-value pairs of parameters to pass to the coastlines plotting
+        function (use `None` for no coastlines).
+
+    Returns:
+    --------
+    NamedTuple
+        Contains all the (post-processed) inputs and 4 additional properties:
+         - wfig (float): the total width of the figure, in inches.
+         - hfig (float): the total height of the figure, in inches.
+         - fig (matplotlib.Figure): the handle to the figure.
+         - axes (2D numpy.array of matplotlib.Axes): the handles to the axes.
+    """
+    crs = preset_crs[crs] if isinstance(crs, str) else crs
+    lims = preset_lims[lims] if isinstance(lims, str) else lims
     if rescale or rescale is None and crs is not None and lims is not None:
         if lims is None:
             raise ValueError("Need explicit limits to rescale.")
-        h = w * (limits[3]-limits[2]) / (limits[1]-limits[0])
+        h = w * (lims[3]-lims[2]) / (lims[1]-lims[0])
     wfig = left + w*nw + wsep*(nw-1) + right
     hfig = bottom + h*nh + hsep*(nh-1) + top
     fig = plt.figure(figsize=(wfig, hfig))
@@ -82,21 +104,34 @@ def prepare_fig(
     for i in range(nh):
         position[0] = left / wfig
         for j in range(nw):
-            axes[i][j] = fig.add_subplot(position=position, projection=proj)
+            axes[i][j] = fig.add_subplot(position=position, projection=crs)
             if coastlines is not None:
                 axes[i][j].coastlines(**coastlines)
             if lims is not None:
-                axes[i][j].set_xlim(limits[0], limits[1])
-                axes[i][j].set_ylim(limits[2], limits[3])
+                axes[i][j].set_xlim(lims[0], lims[1])
+                axes[i][j].set_ylim(lims[2], lims[3])
             position[0] += (w + wsep) / wfig
         position[1] -= (h + hsep) / hfig
     plt.sca(axes[0][0])
-    return _PrepareFig(wfig, hfig, nw, nh, w, h, left, right, bottom, top,
-                       wsep, hsep, lims, rescale, crs, coastlines,
-                       fig, np.array(axes))
+    return _PrepareFigResult(wfig, hfig, nw, nh, w, h, left, right, bottom,
+                             top, wsep, hsep, lims, rescale, crs, coastlines,
+                             fig, np.array(axes))
 
-def units_mpl(units: str) -> str:
-    """Return given units, formatted for Matplotlib."""
+
+def units_mpl(units):
+    """Return given units, formatted for displaying on Matplotlib plots.
+
+    Parameters:
+    -----------
+    units : str
+        The units to format (eg. "km s-1").
+
+    Returns:
+    --------
+    str
+        The units formatted for Matplotlib (eg. "km s$^{-1}$").
+
+    """
     split = units.split()
     for i, s in enumerate(split):
         n = len(s) - 1
