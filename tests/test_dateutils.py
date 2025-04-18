@@ -35,6 +35,7 @@ from geomodeloutputs.dateutils import (
     datetime_plus_nmonths,
 )
 
+
 def test_ndays_in_year():
     # Non-leap year (test all calendars)
     year = 2023
@@ -56,6 +57,7 @@ def test_ndays_in_year():
     assert ndays_in_year(year, "all_leap") == 366
     assert ndays_in_year(year, "366_day") == 366
     assert ndays_in_year(year, "360_day") == 360
+
 
 def test_ndays_in_month():
     # Non-leap year, July (test all calendars)
@@ -98,6 +100,7 @@ def test_ndays_in_month():
     assert ndays_in_month(year, month, "all_leap") == 29
     assert ndays_in_month(year, month, "366_day") == 29
     assert ndays_in_month(year, month, "360_day") == 30
+
 
 def test_datetime_plus_nmonths():
     start = datetime(2025, 1, 15)
