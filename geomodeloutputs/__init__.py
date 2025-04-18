@@ -1,4 +1,4 @@
-# Copyright (c) 2024-now, Institut des Géosciences de l'Environnement, France.
+# Copyright (c) 2024-2025, Institut des Géosciences de l'Environnement, France.
 #
 # License: BSD 3-clause "new" or "revised" license (BSD-3-Clause).
 
