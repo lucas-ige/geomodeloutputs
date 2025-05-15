@@ -6,7 +6,9 @@
 
 from collections import namedtuple
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import cartopy
 
 preset_lims = {
@@ -32,10 +34,10 @@ def prepare_fig(
     nh=1,
     w=3,
     h=4 / (1 + 5**0.5) * 2,
-    left=0.1,
-    right=0.1,
-    bottom=0.1,
-    top=0.1,
+    left=0.12,
+    right=0.12,
+    bottom=0.12,
+    top=0.12,
     wsep=0.1,
     hsep=0.1,
     crs=None,
@@ -70,6 +72,8 @@ def prepare_fig(
     crs : None | str | pyproj.CRS
         The coordinate system used in the subplots. Can be specified as a
         string literal corresponding to one of the presets (eg. `"greenland"`).
+        Automatically set to PlateCarree if not provided and if `coastlines` is
+        not `None`.
     lims : None | str | [numeric, numeric, numeric, numeric]
         The x and y limits of the subplot, as [xmin, xmax, ymin, ymax]. Can be
         specified as a string literal corresponding to one of the presets
@@ -92,6 +96,8 @@ def prepare_fig(
          - fig (matplotlib.Figure): the handle to the figure.
          - axes (2D numpy.array of matplotlib.Axes): the handles to the axes.
     """
+    if crs is None and coastlines is not None:
+        crs = cartopy.crs.PlateCarree()
     crs = preset_crs[crs] if isinstance(crs, str) else crs
     lims = preset_lims[lims] if isinstance(lims, str) else lims
     if rescale or rescale is None and crs is not None and lims is not None:
@@ -161,3 +167,61 @@ def units_mpl(units):
         if n != len(s):
             split[i] = "%s$^{%s}$" % (s[: n + 1], s[n + 1 :])
     return " ".join(split)
+
+
+def hcolorbar(
+    pos,
+    cmap="viridis",
+    fig=None,
+    vmin=0,
+    vmax=1,
+    n=100,
+    ticks=None,
+    label=None,
+):
+    """Add a standalone horizontal color bar to a figure.
+
+    Parameters:
+    -----------
+    pos: [numeric, numeric, numeric, numeric]
+        The position of the axes object for the colorbar, specified as
+        [left, bottom, width, height], in figure relative units.
+    cmap: str | Matplotlib color map
+        The Matplotlib colormap to use (or just its name).
+    fig: Matplotlib figure
+        The Matplotlib figure object on which to draw the color bar (use the
+        current one if None)
+    vmin: numeric
+        The minimum value of the colorscale.
+    vmax: numeric
+        The maximum value of the colorscale.
+    n: int > 0
+        The number of subdivisions to show on the color scale.
+    ticks: Sequence[numeric] | None
+        The ticks of the colorbar (automatically calculated if None).
+    label: str | None
+        The label of the colorbar (ignored if None).
+
+    Returns:
+    --------
+    Matplotlib axes
+        The axes object of the color bar.
+
+    """
+    fig = plt.gcf() if fig is None else fig
+    ax = fig.add_axes(pos)
+    cmap = mpl.colormaps[cmap] if isinstance(cmap, str) else cmap
+    width = (vmax - vmin) / n
+    x = np.linspace(vmin, vmax - width, n)
+    colors = [cmap(i) for i in np.linspace(0, 1, n)]
+    for i in range(n):
+        rect = Rectangle([x[i], 0], width, 1, ec=None, fc=colors[i])
+        ax.add_patch(rect)
+    ax.set_yticks([])
+    if ticks is not None:
+        ax.set_xticks(ticks)
+    if label is not None:
+        ax.set_xlabel(label)
+    ax.set_xlim(vmin, vmax)
+    ax.set_ylim(0, 1)
+    return ax
