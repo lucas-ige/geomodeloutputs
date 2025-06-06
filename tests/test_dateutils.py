@@ -31,9 +31,19 @@
 from datetime import datetime
 from geomodeloutputs.dateutils import (
     ndays_in_year,
+    year_is_leap,
     ndays_in_month,
     datetime_plus_nmonths,
 )
+
+
+def test_year_is_leap():
+    assert year_is_leap(2024) == True
+    assert year_is_leap(2025) == False
+    assert year_is_leap(2026) == False
+    assert year_is_leap(2027) == False
+    assert year_is_leap(2028) == True
+    assert year_is_leap(2029) == False
 
 
 def test_ndays_in_year():

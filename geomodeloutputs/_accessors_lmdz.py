@@ -59,8 +59,9 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
     @method_cacher
     def grid_type(self):
         """Return the type of grid: "reg" (lat/lon) or "ico" (dynamico)."""
-        dims = ("lon", "lat", "cell", "nvertex")
-        dims = dict((d, d in self.dims) for d in dims)
+        dims = dict(
+            (d, d in self.dims) for d in ("lon", "lat", "cell", "nvertex")
+        )
         if (
             dims["lon"]
             and dims["lat"]

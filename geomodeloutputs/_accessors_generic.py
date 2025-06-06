@@ -46,6 +46,16 @@ class GenericDatasetAccessor(ABC):
     def close(self, *args, **kwargs):
         return self._dataset.close(*args, **kwargs)
 
+    def attrvalue_among_guesses(self, varname, attrnames):
+        """Return the value of the first attribute found among given list."""
+        var = self[varname]
+        for attrname in attrnames:
+            try:
+                return var.attrs[attrname]
+            except KeyError:
+                pass
+        raise ValueError("None of the given names exist as attribute.")
+
     def units_nice(self, varname):
         """Return units of given variable, in a predictible format.
 
@@ -70,10 +80,11 @@ class GenericDatasetAccessor(ABC):
             The formatted units (or None for dimensionless variables).
 
         """
-        units = self[varname].attrs["units"]
+        units = self.attrvalue_among_guesses(varname, ("units", "unit"))
         replacements = {
             "-": None,
             "1": None,
+            "m2/s2": "m2 s-2",
             "kg/(s*m2)": "kg m-2 s-1",
             "kg/(m2*s)": "kg m-2 s-1",
             "kg/m2/s": "kg m-2 s-1",
@@ -264,14 +275,25 @@ class GenericDatasetAccessor(ABC):
             raise ValueError("Inconsistent lon/lat bound variable names.")
         return lon_name, lat_name
 
-    def plot_ugridded_colors(self, colors, box=None, ax=None, **kwargs):
+    def plot_ugridded_colors_and_labels(
+        self,
+        colors=None,
+        labels=None,
+        box=None,
+        ax=None,
+        prm_poly=dict(),
+        prm_text=dict(),
+    ):
         """Plot given colors as colored polygons on unstructured grid.
 
         Parameters
         ----------
-        colors : sequence of colors
-            The face colors of the polygons. There must be exactly as many
-            colors as there are cells in the grid.
+        colors : sequence of colors | None
+            If not `None`, then the face colors of the polygons (there must be
+            exactly as many colors as there are cells in the grid).
+        labels : sequence of strings | None
+            If not `None`, then the labels of the polygons (there must be
+            exactly as many labels as there are cells in the grid).
         box : sequence of four numbers
             The longitude and latitude limits of the interesting part of the
             data, in the format (lon_min, lon_max, lat_min, lat_max). Grid
@@ -279,8 +301,10 @@ class GenericDatasetAccessor(ABC):
         ax : Matplotlib axes object
             The Matplotlib axis object onto which to draw the data (default is
             current axis).
-        **kwarg
+        **prm_poly
             These are passed "as is" to Matplotlib's Polygon.
+        **prm_text
+            These are passed "as is" to Matplotlib's text.
 
         """
         if ax is None:
@@ -301,17 +325,38 @@ class GenericDatasetAccessor(ABC):
             idx = range(self.ncells)
         transform = cartopy.crs.PlateCarree()
         for i in idx:
+            if colors[i] is None:
+                continue
             coords = np.array(list(zip(lon_bnds[i, :], lat_bnds[i, :])))
             if coords[:, 0].min() < -100 and coords[:, 0].max() > 100:
                 # These cells are annoying to plot so we skip them (for now)
                 # TODO: fix this
                 continue
             ax.add_patch(
-                Polygon(coords, transform=transform, fc=colors[i], **kwargs)
+                Polygon(coords, transform=transform, fc=colors[i], **prm_poly)
             )
+            if labels is not None:
+                ax.text(
+                    coords[:, 0].mean(),
+                    coords[:, 1].mean(),
+                    labels[i],
+                    ha="center",
+                    va="center",
+                    clip_on=True,  # Currently does not work (bug in matplotlib/cartopy)
+                    transform=transform,
+                    **prm_text,
+                )
 
-    def plot_ugridded_values(
-        self, values, cmap="viridis", vmin=None, vmax=None, **kwargs
+    def plot_ugridded(
+        self,
+        values,
+        labels=False,
+        cmap="viridis",
+        vmin=None,
+        vmax=None,
+        prm_poly=dict(),
+        prm_text=dict(),
+        **kwargs,
     ):
         """Plot given values as colored polygons on unstructured grid.
 
@@ -320,24 +365,54 @@ class GenericDatasetAccessor(ABC):
         values : numpy.array
             The values to be plotted. There must be exactly as many values as
             there are grids in the cell.
-        cmap : Matplotlib color map, or just its name
-            The colormap to use.
+        labels : bool | str | sequence of str
+            Whether to print labels or not. If not a boolean, it can be a str
+            that specifies the format of the labels (eg. "%.2f") or a sequence
+            of str that gives the labels themselves.
+        cmap : None | Matplotlib color map or just its name
+            The colormap to use. Set not None to prevent plotting colors.
         vmin : numeric
             The minimum value to show on the color scale.
         vmax : numeric
             The maximum value to show on the color scale.
+        prm_poly
+            These are passed "as is" to Matplotlib's Polygon.
+        prm_text
+            These are passed "as is" to Matplotlib's text.
         **kwargs
-            These are passed "as is" to self.plot_ugridded_colors.
+            These are passes "as is" to plot_ugridded_colors_and_labels
 
         """
+        if isinstance(labels, bool) and labels:
+            labels = [str(v) for v in values]
+        elif isinstance(labels, bool):
+            labels = None
+        elif isinstance(labels, str):
+            labels = [labels % v for v in values]
+        elif len(labels) != len(values):
+            raise ValueError("Bad number of labels.")
         if vmin is None:
             vmin = values.min()
         if vmax is None:
             vmax = values.max()
-        if isinstance(cmap, str):
-            cmap = mpl.colormaps[cmap]
-        colors = cmap(np.interp(values, np.array([vmin, vmax]), [0, 1]))
-        self.plot_ugridded_colors(colors, **kwargs)
+        if cmap is None:
+            colors = ["none"] * len(values)
+        else:
+            if isinstance(cmap, str):
+                cmap = mpl.colormaps[cmap]
+            colors = cmap(np.interp(values, np.array([vmin, vmax]), [0, 1]))
+        # TODO is the following needed?
+        colors = [
+            None if values[i] is None or np.isnan(values[i]) else col
+            for i, col in enumerate(colors)
+        ]
+        self.plot_ugridded_colors_and_labels(
+            colors=colors,
+            labels=labels,
+            prm_poly=prm_poly,
+            prm_text=prm_text,
+            **kwargs,
+        )
 
 
 @xr.register_dataset_accessor("wizard")

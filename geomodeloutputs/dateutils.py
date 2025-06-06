@@ -20,6 +20,11 @@ CF_CALENDARTYPE_ALL = (
 CF_CALENDARTYPE_DEFAULT = "gregorian"
 
 
+def year_is_leap(year):
+    """Return True if and only if given year (int) is a leap year."""
+    return datetime(year, 12, 31).timetuple().tm_yday == 366
+
+
 def ndays_in_year(year, calendar=CF_CALENDARTYPE_DEFAULT):
     """Return the number of days in given year according to given calendar.
 
@@ -93,7 +98,7 @@ def datetime_plus_nmonths(start, nmonths, calendar=CF_CALENDARTYPE_DEFAULT):
     ----------
     start : datetime
         The start date.
-    nmonths : int
+    nmonths : numeric
         The number of months to add to start.
     calendar : str
         The type of calendar as a CF-compliant calendar name.
