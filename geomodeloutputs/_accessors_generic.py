@@ -204,6 +204,18 @@ class GenericDatasetAccessor(ABC):
         """The CRS (cartopy) corresponding to dataset."""
         raise NotImplementedError("Not implemented for this case.")
 
+    @property
+    @method_cacher
+    def crs(self):
+        """The CRS corresponding to the dataset.
+
+        We choose here to return the cartopy CRS rather than the pyproj CRS
+        because the cartopy CRS is a subclass of the pyproj CRS, so it
+        potentially has additional functionalily.
+
+        """
+        return self.crs_cartopy
+
     def ll2xy(self, lon, lat):
         """Convert from (lon,lat) to (x,y)."""
         tr = transformer_from_crs(self.crs)
@@ -323,7 +335,7 @@ class GenericDatasetAccessor(ABC):
             idx = np.array(range(self.ncells))[idx]
         else:
             idx = range(self.ncells)
-        transform = cartopy.crs.PlateCarree()
+        transform = cartopy.crs.Geodetic()
         for i in idx:
             if colors[i] is None:
                 continue
@@ -456,18 +468,6 @@ class WizardDatasetAccessor(GenericDatasetAccessor):
     @method_cacher
     def crs_cartopy(self):
         """The CRS (cartopy) corresponding to the dataset."""
-        return self.myself.crs_cartopy
-
-    @property
-    @method_cacher
-    def crs(self):
-        """The CRS corresponding to the dataset.
-
-        We choose here to return the cartopy CRS rather than the pyproj CRS
-        because the cartopy CRS is a subclass of the pyproj CRS, so it
-        potentially has additional functionalily.
-
-        """
         return self.myself.crs_cartopy
 
     def time_coord(self, varname):
