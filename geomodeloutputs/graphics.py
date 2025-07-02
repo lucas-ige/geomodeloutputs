@@ -12,10 +12,15 @@ from matplotlib.patches import Rectangle
 import cartopy
 
 preset_lims = {
+    "antarctica": (-2640000, 2880000, -2250000, 2350000),
     "greenland": (-750000, 920000, -3460000, -533000),
 }
 
 preset_crs = {
+    "antarctica": cartopy.crs.SouthPolarStereo(
+        central_longitude=0,
+        true_scale_latitude=-71,
+    ),
     "greenland": cartopy.crs.NorthPolarStereo(
         central_longitude=-45,
         true_scale_latitude=70,
