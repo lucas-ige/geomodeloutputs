@@ -85,6 +85,7 @@ class GenericDatasetAccessor(ABC):
             "-": None,
             "1": None,
             "m2/s2": "m2 s-2",
+            "kg/m2": "kg m-2",
             "kg/(s*m2)": "kg m-2 s-1",
             "kg/(m2*s)": "kg m-2 s-1",
             "kg/m2/s": "kg m-2 s-1",
@@ -241,7 +242,7 @@ class GenericDatasetAccessor(ABC):
         This property makes sense for unstructured grids only.
 
         """
-        return self._guess_dimname(["cell", "cells", "cell_mesh"])
+        return self._guess_dimname(["cell", "cells", "ncells", "cell_mesh"])
 
     @property
     def ncells(self):
@@ -361,9 +362,10 @@ class GenericDatasetAccessor(ABC):
             ax = plt.gca()
         lon_bnds = self[self.varnames_lonlat_bounds[0]].values
         lat_bnds = self[self.varnames_lonlat_bounds[1]].values
-        if box is not None:
+        if box is not None or labels is not None:
             lon = self[self.varnames_lonlat[0]].values
             lat = self[self.varnames_lonlat[1]].values
+        if box is not None:
             idx = (
                 (lon >= box[0])
                 * (lon <= box[1])
@@ -378,17 +380,13 @@ class GenericDatasetAccessor(ABC):
             if colors[i] is None:
                 continue
             coords = np.array(list(zip(lon_bnds[i, :], lat_bnds[i, :])))
-            if coords[:, 0].min() < -100 and coords[:, 0].max() > 100:
-                # These cells are annoying to plot so we skip them (for now)
-                # TODO: fix this
-                continue
             ax.add_patch(
                 Polygon(coords, transform=transform, fc=colors[i], **prm_poly)
             )
             if labels is not None:
                 ax.text(
-                    coords[:, 0].mean(),
-                    coords[:, 1].mean(),
+                    lon[i],
+                    lat[i],
                     labels[i],
                     ha="center",
                     va="center",
@@ -442,9 +440,9 @@ class GenericDatasetAccessor(ABC):
         elif len(labels) != len(values):
             raise ValueError("Bad number of labels.")
         if vmin is None:
-            vmin = values.min()
+            vmin = np.nanmin(values)
         if vmax is None:
-            vmax = values.max()
+            vmax = np.nanmax(values)
         if cmap is None:
             colors = ["none"] * len(values)
         else:
