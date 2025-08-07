@@ -28,7 +28,7 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
     @method_cacher
     def crs_cartopy(self):
         """Return the CRS (cartopy) corresponding to the file."""
-        return cartopy.crs.PlateCarree()
+        return cartopy.crs.Geodetic()
 
     @property
     @method_cacher
@@ -45,14 +45,26 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
         handle these cases). For these grid cells, a NAN value is used.
 
         """
-        lon, lat = self["lon"].values, self["lat"].values
-        nlon, nlat = lon.size, lat.size
         geod = pyproj.Geod(ellps="WGS84")
-        out = np.full([nlat, nlon], np.nan)
-        for i, j in itertools.product(range(1, nlat - 1), range(1, nlon - 1)):
-            lons = (lon[j - 1], lon[j], lon[j], lon[j - 1])
-            lats = (lat[i - 1], lat[i - 1], lat[i], lat[i])
-            out[i, j] = geod.polygon_area_perimeter(lons, lats)[0]
+        if self.grid_type == "reg":
+            lon, lat = self.varnames_lonlat
+            lon, lat = self[lon].values, self[lat].values
+            nlon, nlat = lon.size, lat.size
+            out = np.full([nlat, nlon], np.nan)
+            for i, j in itertools.product(
+                range(1, nlat - 1), range(1, nlon - 1)
+            ):
+                lons = (lon[j - 1], lon[j], lon[j], lon[j - 1])
+                lats = (lat[i - 1], lat[i - 1], lat[i], lat[i])
+                out[i, j] = geod.polygon_area_perimeter(lons, lats)[0]
+        elif self.grid_type == "ico":
+            lon, lat = self.varnames_lonlat_bounds
+            lon, lat = self[lon].values, self[lat].values
+            out = np.full(self.ncells, np.nan)
+            for i in range(self.ncells):
+                out[i] = geod.polygon_area_perimeter(lon[i, :], lat[i, :])[0]
+        else:
+            raise ValueError("Unknown grid type: %s." % self.grid_type)
         return out
 
     @property
@@ -78,3 +90,11 @@ class LMDzDatasetAccessor(GenericDatasetAccessor):
             return "ico"
         else:
             raise ValueError("Cannot guess LMDz grid type.")
+
+    @property
+    @method_cacher
+    def nbp(self):
+        """Return the value of NBP for given grid (Dynamico grid only)."""
+        if self.grid_type != "ico":
+            raise ValueError("This property is only valid for Dynamico grids.")
+        return {16002: 40}[self.ncells]
