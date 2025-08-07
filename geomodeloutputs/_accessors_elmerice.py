@@ -79,7 +79,21 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 
     @property
     @method_cacher
-    def dimname_edge(self):
+    def dimname_ncells(self):
+        """The name of the dimensions for the number of grid cells."""
+        name = self.meshname
+        if name is not None:
+            name = "n%s_face" % name
+        return name
+
+    @property
+    def dimname_nfaces(self):
+        """The name of the dimensions for the number of grid cells."""
+        return self.dimname_ncells
+
+    @property
+    @method_cacher
+    def dimname_nedges(self):
         """Return the name of the dimension that holds the number of edges."""
         name = self.meshname
         if name is not None:
@@ -88,16 +102,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 
     @property
     @method_cacher
-    def dimname_face(self):
-        """Return the name of the dimension that holds the number of faces."""
-        name = self.meshname
-        if name is not None:
-            name = "n%s_face" % name
-        return name
-
-    @property
-    @method_cacher
-    def dimname_node(self):
+    def dimname_nnodes(self):
         """Return the name of the dimension that holds the number of nodes."""
         name = self.meshname
         if name is not None:
@@ -106,7 +111,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
 
     @property
     @method_cacher
-    def dimname_vertex(self):
+    def dimname_nvertices(self):
         """Return the name of the dim. that holds the number of vertices."""
         name = self.meshname
         if name is not None:
@@ -131,8 +136,8 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
         The indices are given in Python convention (ie. starting at 0).
 
         """
-        n_faces = self.sizes[self.dimname_face]
-        n_vertices = self.sizes[self.dimname_vertex]
+        n_faces = self.sizes[self.dimname_nfaces]
+        n_vertices = self.sizes[self.dimname_nvertices]
         varname = self.meshname + "_face_nodes"
         out = np.array(self[varname].values)
         if out.shape != (n_faces, n_vertices):
@@ -158,7 +163,7 @@ class ElmerIceDatasetAccessor(GenericDatasetAccessor):
             The corresponding array of face values.
 
         """
-        if len(values) != self.sizes[self.dimname_node]:
+        if len(values) != self.sizes[self.dimname_nnodes]:
             raise ValueError("Bad length for input.")
         map_ = self.map_face_node
         out = np.zeros(map_.shape[0])
