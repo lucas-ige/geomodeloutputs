@@ -348,7 +348,7 @@ class GenericDatasetAccessor(ABC):
         box : sequence of four numbers
             The longitude and latitude limits of the interesting part of the
             data, in the format (lon_min, lon_max, lat_min, lat_max). Grid
-            cells outse of this range will not be plotted.
+            cells out of this range will not be plotted.
         ax : Matplotlib axes object
             The Matplotlib axis object onto which to draw the data (default is
             current axis).
@@ -423,12 +423,12 @@ class GenericDatasetAccessor(ABC):
             The minimum value to show on the color scale.
         vmax : numeric
             The maximum value to show on the color scale.
-        prm_poly
-            These are passed "as is" to Matplotlib's Polygon.
-        prm_text
-            These are passed "as is" to Matplotlib's text.
+        prm_poly : dict
+            These parameters are passed "as is" to Matplotlib's Polygon.
+        prm_text : dict
+            These parameters are passed "as is" to Matplotlib's text.
         **kwargs
-            These are passes "as is" to plot_ugridded_colors_and_labels
+            These are passed "as is" to plot_ugridded_colors_and_labels.
 
         """
         if isinstance(labels, bool) and labels:
