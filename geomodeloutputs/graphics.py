@@ -12,7 +12,7 @@ from matplotlib.patches import Rectangle
 import cartopy
 
 preset_lims = {
-    "antarctica": (-2640000, 2880000, -2250000, 2350000),
+    "antarctica": (-3100000, 3100000, -2500000, 2550000),
     "greenland": (-750000, 920000, -3460000, -533000),
 }
 
@@ -174,6 +174,32 @@ def units_mpl(units):
     return " ".join(split)
 
 
+def coordinates_aspect_ratio(ax=None):
+    """Return the coordinates' aspect ratio of given or current axes.
+
+    Parameters
+    ----------
+    ax: Matplotlib axes object | None
+        The Matplotlib axes object of interest (the current one if None).
+
+    Returns
+    -------
+    float
+        The number r such that r units on the y-axis is the same physical
+        length as 1 unit on the x-axis on the figure.
+
+    """
+    ax = plt.gca() if ax is None else ax
+    fig = ax.get_figure()
+    fig_width, fig_height = fig.get_size_inches()
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    bbox = ax.get_position()
+    x_scale = fig_width * (bbox.x1 - bbox.x0) / (xmax - xmin)
+    y_scale = fig_height * (bbox.y1 - bbox.y0) / (ymax - ymin)
+    return x_scale / y_scale
+
+
 def hcolorbar(
     pos,
     cmap="viridis",
@@ -195,7 +221,7 @@ def hcolorbar(
         The Matplotlib colormap to use (or just its name).
     fig: Matplotlib figure
         The Matplotlib figure object on which to draw the color bar (use the
-        current one if None)
+        current one if None).
     vmin: numeric
         The minimum value of the colorscale.
     vmax: numeric
@@ -229,4 +255,68 @@ def hcolorbar(
         ax.set_xlabel(label)
     ax.set_xlim(vmin, vmax)
     ax.set_ylim(0, 1)
+    return ax
+
+
+def vcolorbar(
+    pos,
+    cmap="viridis",
+    fig=None,
+    vmin=0,
+    vmax=1,
+    n=100,
+    ticks=None,
+    label=None,
+    right=False,
+):
+    """Add a standalone vertical color bar to a figure.
+
+    Parameters:
+    -----------
+    pos: [numeric, numeric, numeric, numeric]
+        The position of the axes object for the colorbar, specified as
+        [left, bottom, width, height], in figure relative units.
+    cmap: str | Matplotlib color map
+        The Matplotlib colormap to use (or just its name).
+    fig: Matplotlib figure
+        The Matplotlib figure object on which to draw the color bar (use the
+        current one if None).
+    vmin: numeric
+        The minimum value of the colorscale.
+    vmax: numeric
+        The maximum value of the colorscale.
+    n: int > 0
+        The number of subdivisions to show on the color scale.
+    ticks: Sequence[numeric] | None
+        The ticks of the colorbar (automatically calculated if None).
+    label: str | None
+        The label of the colorbar (ignored if None).
+    right: bool
+        Wether the ticks and label should be on the right-hand side.
+
+    Returns:
+    --------
+    Matplotlib axes
+        The axes object of the color bar.
+
+    """
+    fig = plt.gcf() if fig is None else fig
+    ax = fig.add_axes(pos)
+    cmap = mpl.colormaps[cmap] if isinstance(cmap, str) else cmap
+    height = (vmax - vmin) / n
+    y = np.linspace(vmin, vmax - height, n)
+    colors = [cmap(i) for i in np.linspace(0, 1, n)]
+    for i in range(n):
+        rect = Rectangle([0, y[i]], 1, height, ec=None, fc=colors[i])
+        ax.add_patch(rect)
+    ax.set_xticks([])
+    if ticks is not None:
+        ax.set_yticks(ticks)
+    if label is not None:
+        ax.set_ylabel(label)
+    if right:
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(vmin, vmax)
     return ax
