@@ -10,11 +10,11 @@ import xarray as xr
 import pyproj
 import cartopy
 from ._genutils import method_cacher
-from ._accessors_generic import GenericDatasetAccessor
+from ._accessors_common import CommonDatasetAccessor
 
 
 @xr.register_dataset_accessor("lmdz")
-class LMDzDatasetAccessor(GenericDatasetAccessor):
+class LMDzDatasetAccessor(CommonDatasetAccessor):
 
     surface_types = ("ter", "lic", "oce", "sic")
 

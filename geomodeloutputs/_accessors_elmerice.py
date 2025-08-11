@@ -10,11 +10,11 @@ import pyproj
 from matplotlib.tri import Triangulation
 import cartopy
 from ._genutils import method_cacher
-from ._accessors_generic import GenericDatasetAccessor
+from ._accessors_common import CommonDatasetAccessor
 
 
 @xr.register_dataset_accessor("elmerice")
-class ElmerIceDatasetAccessor(GenericDatasetAccessor):
+class ElmerIceDatasetAccessor(CommonDatasetAccessor):
 
     @property
     @method_cacher

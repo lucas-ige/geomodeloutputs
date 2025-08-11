@@ -157,29 +157,3 @@ def open_mfdataset(filepath, **kwargs):
             '"preprocess" as a keyword argument.'
         )
     return xr.open_mfdataset(filepath, preprocess=preprocess_dataset, **kwargs)
-
-
-def transformer_from_crs(crs, reverse=False):
-    """Return the pyproj Transformer corresponding to given CRS.
-
-    Parameters
-    ----------
-    crs : pyproj.CRS
-        The CRS object that represents the projected coordinate system.
-    reverse : bool
-        The direction of the Transformer:
-         - False: from (lon,lat) to (x,y).
-         - True: from (x,y) to (lon,lat).
-
-    Returns
-    -------
-    pyproj.Transformer
-        An object that converts (lon,lat) to (x,y), or the other way around if
-        reverse is True.
-
-    """
-    fr = crs.geodetic_crs
-    to = crs
-    if reverse:
-        fr, to = to, fr
-    return pyproj.Transformer.from_crs(fr, to, always_xy=True)

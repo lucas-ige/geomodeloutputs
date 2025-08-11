@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import cartopy
 
+# The following import(s) are to make convenience function(s) easily accessible
+from ._accessors_generic import _units_mpl as units_mpl
+
 preset_lims = {
     "antarctica": (-3100000, 3100000, -2500000, 2550000),
     "greenland": (-750000, 920000, -3460000, -533000),
@@ -146,32 +149,6 @@ def prepare_fig(
         fig,
         np.array(axes),
     )
-
-
-def units_mpl(units):
-    """Return given units, formatted for displaying on Matplotlib plots.
-
-    Parameters:
-    -----------
-    units : str
-        The units to format (eg. "km s-1").
-
-    Returns:
-    --------
-    str
-        The units formatted for Matplotlib (eg. "km s$^{-1}$").
-
-    """
-    split = units.split()
-    for i, s in enumerate(split):
-        n = len(s) - 1
-        while n >= 0 and s[n] in "-0123456789":
-            n -= 1
-        if n < 0:
-            raise ValueError("Could not process units.")
-        if n != len(s):
-            split[i] = "%s$^{%s}$" % (s[: n + 1], s[n + 1 :])
-    return " ".join(split)
 
 
 def coordinates_aspect_ratio(ax=None):

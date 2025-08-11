@@ -5,12 +5,12 @@
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
 import xarray as xr
-from ._accessors_generic import GenericDatasetAccessor
+from ._accessors_common import CommonDatasetAccessor
 from ._genutils import method_cacher
 
 
 @xr.register_dataset_accessor("wizard")
-class WizardDatasetAccessor(GenericDatasetAccessor):
+class WizardDatasetAccessor(CommonDatasetAccessor):
 
     @property
     @method_cacher

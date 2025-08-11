@@ -12,11 +12,11 @@ import warnings
 import xarray as xr
 import pyproj
 import cartopy
-from ._accessors_generic import GenericDatasetAccessor
+from ._accessors_common import CommonDatasetAccessor
 
 
 @xr.register_dataset_accessor("wrf")
-class WRFDatasetAccessor(GenericDatasetAccessor):
+class WRFDatasetAccessor(CommonDatasetAccessor):
     """Accessor for WRF and WRF-Chem outputs."""
 
     @property

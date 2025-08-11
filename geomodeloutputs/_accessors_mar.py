@@ -7,11 +7,11 @@
 import xarray as xr
 import pyproj
 import cartopy
-from ._accessors_generic import GenericDatasetAccessor
+from ._accessors_common import CommonDatasetAccessor
 
 
 @xr.register_dataset_accessor("mar")
-class MARDatasetAccessor(GenericDatasetAccessor):
+class MARDatasetAccessor(CommonDatasetAccessor):
 
     def time_coord(self, varname):
         """Return the name of the time coordinate associated with variable."""
