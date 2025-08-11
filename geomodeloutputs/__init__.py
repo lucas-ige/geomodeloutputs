@@ -14,3 +14,4 @@ from ._accessors_generic import WizardDatasetAccessor
 from ._accessors_elmerice import ElmerIceDatasetAccessor
 from ._accessors_lmdz import LMDzDatasetAccessor
 from ._accessors_mar import MARDatasetAccessor
+from ._accessors_wrf import WRFDatasetAccessor
