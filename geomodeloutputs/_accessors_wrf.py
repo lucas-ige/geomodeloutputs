@@ -8,11 +8,20 @@ This file adds an accessor for WRF and WRF-Chem model outputs.
 
 """
 
+# Required imports
 import warnings
 import xarray as xr
-import pyproj
-import cartopy
 from ._accessors_common import CommonDatasetAccessor
+
+# Optional imports
+try:
+    import pyproj
+except ImportError:
+    pass
+try:
+    import cartopy
+except ImportError:
+    pass
 
 
 @xr.register_dataset_accessor("wrf")

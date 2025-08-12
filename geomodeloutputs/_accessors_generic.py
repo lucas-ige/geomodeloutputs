@@ -4,8 +4,14 @@
 
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
+# Required imports
 from abc import ABC, abstractmethod
-import pyproj
+
+# Optional imports
+try:
+    import pyproj
+except ImportError:
+    pass
 
 
 def _transformer_from_crs(crs, reverse=False):
