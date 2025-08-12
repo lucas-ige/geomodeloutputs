@@ -94,7 +94,16 @@ class WRFDatasetAccessor(CommonDatasetAccessor):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             proj = crs_pyproj.to_dict()
-        if proj["proj"] == "stere":
+        if proj["proj"] == "lcc":
+            return cartopy.crs.LambertConformal(
+                central_longitude=proj["lon_0"],
+                central_latitude=proj["lat_0"],
+                false_easting=proj["x_0"],
+                false_northing=proj["y_0"],
+                standard_parallels=(proj["lat_1"], proj["lat_2"]),
+                globe=cartopy.crs.Globe(datum=proj["datum"]),
+            )
+        elif proj["proj"] == "stere":
             return cartopy.crs.Stereographic(
                 central_longitude=proj["lon_0"],
                 central_latitude=proj["lat_0"],
