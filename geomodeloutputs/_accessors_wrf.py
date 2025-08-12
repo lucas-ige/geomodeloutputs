@@ -24,11 +24,40 @@ class WRFDatasetAccessor(CommonDatasetAccessor):
         """Return the CRS (pyproj) corresponding to dataset."""
         if self.attrs["POLE_LON"] != 0:
             raise ValueError("Invalid POLE_LON: %f." % self.attrs["POLE_LON"])
+        if self.attrs["POLE_LAT"] not in (90, -90):
+            raise ValueError("Invalid value for attribute POLE_LAT.")
         proj = self.attrs["MAP_PROJ"]
         if proj in (0, 1, 102, 3, 4, 5, 6, 105, 203):
             raise NotImplementedError("Projection code %d." % proj)
-        proj = {2: "polarstereo"}[proj]
+        proj = {1: "lcc", 2: "polarstereo"}[proj]
         return getattr(self, "_crs_pyproj_%s" % proj)
+
+    @property
+    def _crs_pyproj_lcc(self):
+        """Return the CRS (pyproj) corresponding to dataset.
+
+        This method handles the specific case of Lambert conformal conic
+        projections.
+
+        """
+        if self.attrs["MAP_PROJ"] != 1:
+            raise ValueError("Invalid value for MAP_PROJ.")
+        proj_name = "Lambert Conformal Conic"
+        map_proj_char = self.attrs.get("MAP_PROJ_CHAR", proj_name)
+        if map_proj_char != proj_name:
+            raise ValueError("Invalid value for MAP_PROJ_CHAR.")
+        if self.attrs["STAND_LON"] != self.attrs["CEN_LON"]:
+            raise ValueError("Inconsistency in central longitude values.")
+        if self.attrs["MOAD_CEN_LAT"] != self.attrs["CEN_LAT"]:
+            raise ValueError("Inconsistency in central latitude values.")
+        proj = dict(
+            proj="lcc",
+            lat_0=self.attrs["CEN_LAT"],
+            lon_0=self.attrs["CEN_LON"],
+            lat_1=self.attrs["TRUELAT1"],
+            lat_2=self.attrs["TRUELAT2"],
+        )
+        return pyproj.CRS.from_dict(proj)
 
     @property
     def _crs_pyproj_polarstereo(self):
@@ -40,12 +69,12 @@ class WRFDatasetAccessor(CommonDatasetAccessor):
         """
         if self.attrs["MAP_PROJ"] != 2:
             raise ValueError("Invalid value for MAP_PROJ.")
-        if self.attrs["MAP_PROJ_CHAR"] != "Polar Stereographic":
+        proj_name = "Polar Stereographic"
+        map_proj_char = self.attrs.get("MAP_PROJ_CHAR", proj_name)
+        if map_proj_char != proj_name:
             raise ValueError("Invalid value for MAP_PROJ_CHAR.")
         if self.attrs["STAND_LON"] != self.attrs["CEN_LON"]:
             raise ValueError("Inconsistency in central longitude values.")
-        if self.attrs["POLE_LAT"] not in (90, -90):
-            raise ValueError("Invalid value for attribute POLE_LAT.")
         for which in ("TRUELAT1", "TRUELAT2", "MOAD_CEN_LAT"):
             if round(self.attrs[which], 4) != round(self.attrs["CEN_LAT"], 4):
                 raise ValueError("Inconsistency in true latitude values.")
