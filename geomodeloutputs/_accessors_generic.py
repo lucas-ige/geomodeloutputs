@@ -101,6 +101,27 @@ class GenericDatasetAccessor(ABC):
 
     ## What is below adds new functionality
 
+    def units(self, varname):
+        """Return units of given variable.
+
+        Parameters
+        ----------
+        varname : str
+            The name of the variable in the NetCDF file.
+
+        Returns
+        -------
+        str
+            The units of this variable as defined in the NetCDF file.
+
+        """
+        attrs = self[varname].attrs
+        try:
+            units = attrs["units"]
+        except KeyError:
+            units = attrs["unit"]
+        return units
+
     def units_nice(self, varname):
         """Return units of given variable, in a predictible format.
 
@@ -125,10 +146,7 @@ class GenericDatasetAccessor(ABC):
             The formatted units (or None for dimensionless variables).
 
         """
-        try:
-            units = self.attrs["units"]
-        except KeyError:
-            units = self.attrs["unit"]
+        units = self.units(varname)
         replacements = {
             "-": None,
             "1": None,
