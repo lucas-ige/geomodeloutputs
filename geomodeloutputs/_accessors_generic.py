@@ -4,7 +4,7 @@
 
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
-from abc import ABC
+from abc import ABC, abstractmethod
 import pyproj
 
 
@@ -61,11 +61,19 @@ def _units_mpl(units):
 
 
 class GenericDatasetAccessor(ABC):
-    """Template for dataset accessors."""
+    """Template for dataset accessors.
+
+    Parameters
+    ----------
+    dataset: xarray dataset
+        The xarray dataset instance for which the accessor is defined.
+
+    """
 
     def __init__(self, dataset):
         self._dataset = dataset
-        self._cache = dict()
+
+    ## What is below emulates the interface of xarray datasets
 
     def __getitem__(self, *args, **kwargs):
         return self._dataset.__getitem__(*args, **kwargs)
@@ -84,6 +92,8 @@ class GenericDatasetAccessor(ABC):
 
     def close(self, *args, **kwargs):
         return self._dataset.close(*args, **kwargs)
+
+    ## What is below adds new functionality
 
     def units_nice(self, varname):
         """Return units of given variable, in a predictible format.
@@ -109,7 +119,10 @@ class GenericDatasetAccessor(ABC):
             The formatted units (or None for dimensionless variables).
 
         """
-        units = self.attrvalue_among_guesses(varname, ("units", "unit"))
+        try:
+            units = self.attrs["units"]
+        except KeyError:
+            units = self.attrs["unit"]
         replacements = {
             "-": None,
             "1": None,
@@ -150,23 +163,36 @@ class GenericDatasetAccessor(ABC):
         else:
             actual = self[varname].attrs["units"]
         if actual != expected:
-            raise ValueError(
-                'Bad units: expected "%s", got "%s"' % (expected, actual)
-            )
+            msg = 'Bad units: expected "%s", got "%s"' % (expected, actual)
+            raise ValueError(msg)
 
     def units_mpl(self, varname):
-        """Return the units of given variable, formatted for Matplotlib."""
+        """Return the units of given variable, formatted for Matplotlib.
+
+        Parameters
+        ----------
+        varname: str
+            The name of the variable.
+
+        Returns
+        -------
+        str
+            The units of given variable, formatted for Matplotlib.
+
+        """
         return _units_mpl(self.units_nice(varname))
 
     @property
+    @abstractmethod
     def crs_pyproj(self):
         """The CRS (pyproj) corresponding to dataset."""
-        raise NotImplementedError("Not implemented for this case.")
+        pass
 
     @property
+    @abstractmethod
     def crs_cartopy(self):
         """The CRS (cartopy) corresponding to dataset."""
-        raise NotImplementedError("Not implemented for this case.")
+        pass
 
     @property
     def crs(self):
@@ -180,11 +206,39 @@ class GenericDatasetAccessor(ABC):
         return self.crs_cartopy
 
     def ll2xy(self, lon, lat):
-        """Convert from (lon,lat) to (x,y)."""
+        """Convert from (lon,lat) to (x,y).
+
+        Parameters
+        ----------
+        lon: numeric (scalar, sequence, or numpy array)
+            The longitude value(s).
+        lat: numeric (scalar, sequence, or numpy array)
+            The latitude value(s). Must have the same shape as "lon".
+
+        Returns
+        -------
+        [numeric, numeric] (each has the same shape as lon and lat)
+            The x and y values, respectively.
+
+        """
         tr = _transformer_from_crs(self.crs)
         return tr.transform(lon, lat)
 
     def xy2ll(self, x, y):
-        """Convert from (x,y) to (lon,lat)."""
+        """Convert from (x,y) to (lon,lat).
+
+        Parameters
+        ----------
+        x: numeric (scalar, sequence, or numpy array)
+            The x value(s).
+        y: numeric (scalar, sequence, or numpy array)
+            The y value(s). Must have the same shape as "x".
+
+        Returns
+        -------
+        [numeric, numeric] (each has the same shape as x and y)
+            The longitude and latitude values, respectively.
+
+        """
         tr = _transformer_from_crs(self.crs, reverse=True)
         return tr.transform(x, y)

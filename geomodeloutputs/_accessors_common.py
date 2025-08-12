@@ -23,6 +23,10 @@ from ._genutils import (
 class CommonDatasetAccessor(GenericDatasetAccessor):
     """Common dataset accessor."""
 
+    def __init__(self, dataset):
+        GenericDatasetAccessor.__init__(self, dataset)
+        self._cache = dict()
+
     def attrvalue_among_guesses(self, varname, attrnames):
         """Return the value of the first attribute found among given list."""
         var = self[varname]
