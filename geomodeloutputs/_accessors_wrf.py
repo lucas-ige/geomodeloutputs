@@ -17,11 +17,18 @@ from ._accessors_common import CommonDatasetAccessor
 
 @xr.register_dataset_accessor("wrf")
 class WRFDatasetAccessor(CommonDatasetAccessor):
-    """Accessor for WRF and WRF-Chem outputs."""
+    """Accessor for WRF and WRF-Chem outputs.
+
+    Parameters
+    ----------
+    dataset: xarray dataset
+        The xarray dataset instance for which the accessor is defined.
+
+    """
 
     @property
     def crs_pyproj(self):
-        """Return the CRS (pyproj) corresponding to dataset."""
+        """The pyproj CRS corresponding to dataset."""
         if self.attrs["POLE_LON"] != 0:
             raise ValueError("Invalid POLE_LON: %f." % self.attrs["POLE_LON"])
         if self.attrs["POLE_LAT"] not in (90, -90):
@@ -34,7 +41,7 @@ class WRFDatasetAccessor(CommonDatasetAccessor):
 
     @property
     def _crs_pyproj_lcc(self):
-        """Return the CRS (pyproj) corresponding to dataset.
+        """The pyproj CRS corresponding to dataset.
 
         This method handles the specific case of Lambert conformal conic
         projections.
@@ -61,7 +68,7 @@ class WRFDatasetAccessor(CommonDatasetAccessor):
 
     @property
     def _crs_pyproj_polarstereo(self):
-        """Return the CRS (pyproj) corresponding to dataset.
+        """The pyproj CRS corresponding to dataset.
 
         This method handles the specific case of polar stereographic
         projections.
@@ -88,7 +95,7 @@ class WRFDatasetAccessor(CommonDatasetAccessor):
 
     @property
     def crs_cartopy(self):
-        """Return the CRS (cartopy) corresponding to dataset."""
+        """The cartopy CRS corresponding to dataset."""
         # We let self.crs_pyproj do all the quality checking
         crs_pyproj = self.crs_pyproj
         with warnings.catch_warnings():
