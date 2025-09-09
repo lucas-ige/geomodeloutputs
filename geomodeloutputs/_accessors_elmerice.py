@@ -63,19 +63,17 @@ class ElmerIceDatasetAccessor(CommonDatasetAccessor):
     @method_cacher
     def meshname(self):
         """Return the name of the mesh (or None if it cannot be guessed)."""
-        dims = self.sizes.keys()
+        choices = ("node", "edge", "face", "vertex")
         candidates = [
-            d
-            for d in dims
-            if len(d) > 6 and d.startswith("n") and d.endswith("_edge")
+            dim[1 : dim.rindex("_")]
+            for dim in self.sizes.keys()
+            if dim.startswith("n")
+            and not dim.startswith("n_")
+            and any(dim.endswith("_%s" % choice) for choice in choices)
         ]
-        if len(candidates) != 1:
-            return None
-        meshname = candidates[0][1:-5]
-        for which in ("face", "node", "vertex"):
-            if "n%s_%s" % (meshname, which) not in dims:
-                return None
-        return meshname
+        if len(set(candidates)) != 1:
+            raise ValueError("Could not determine Elmer/Ice mesh name.")
+        return candidates[0]
 
     @property
     @method_cacher
