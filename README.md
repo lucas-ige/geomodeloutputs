@@ -2,7 +2,7 @@
 
 The geomodeloutputs Python package aims to simplify the analysis of geoscientific model output data. It is moslty designed to support my work at the Institut des Géosciences de l'Environnement (IGE), in Grenoble, France. But it might also be useful to you too, who knows? It is released under a [free software](https://www.gnu.org/philosophy/free-sw.html) license.
 
-This repository is hosted [here on GitHub](https://github.com/lucas-ige/geomodeloutputs) and [here on my institutional GitLab](https://gricad-gitlab.univ-grenoble-alpes.fr/bastiluc/geomodeloutputs).
+This repository is hosted [here on GitHub](https://github.com/lucas-ige/geomodeloutputs) and [here on my institutional GitLab](https://gricad-gitlab.univ-grenoble-alpes.fr/lucas-ige/geomodeloutputs).
 
 NB: this is work in progress.
 
