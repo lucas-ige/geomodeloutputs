@@ -4,9 +4,8 @@
 
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
-from datetime import datetime
+import cftime
 import numpy as np
-import pandas as pd
 import xarray as xr
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -63,38 +62,6 @@ class CommonDatasetAccessor(GenericDatasetAccessor):
             coord = "time%s" % coord
         return coord
 
-    def times(self, varname, dtype="datetime"):
-        """Return array of times corresponding to given variable.
-
-        Parameters
-        ----------
-        varname : str
-            The name of the variable of interest.
-        dtype : {"datetime", "pandas", "numpy" ,"xarray"}
-            The data type of dates in the output.
-
-        Returns
-        -------
-        numpy.array
-            A numpy array containging the dates.
-
-        """
-        values = self[self.time_coord(varname)]
-        if dtype == "datetime":
-            f = "%Y-%m-%d %H-%M-%S %f"
-
-            def convert(t):
-                return datetime.strptime(pd.to_datetime(t).strftime(f), f)
-
-            values = np.vectorize(convert)(values.values)
-        elif dtype == "pandas":
-            values = pd.to_datetime(values.values)
-        elif dtype == "numpy":
-            values = values.values
-        elif dtype != "xarray":
-            raise ValueError("Invalid dtype: %s." % dtype)
-        return values
-
     def _guess_dimname(self, guesses):
         """Return name of only dimension in guesses that is found, or error."""
         return unique_guess_in_iterable(guesses, self.dims)
@@ -131,6 +98,14 @@ class CommonDatasetAccessor(GenericDatasetAccessor):
         return varname
 
     @property
+    def varnames_time(self):
+        """The names of all the time variables of the file."""
+        guesses = ["time", "time_counter", "time_centered"]
+        for guess in list(guesses):
+            guesses.append("%s_bounds" % guess)
+        return tuple(g for g in guesses if g in self._dataset.variables)
+
+    @property
     @method_cacher
     def varnames_lonlat(self):
         """The names of the longitude and latitude variables."""
@@ -164,6 +139,28 @@ class CommonDatasetAccessor(GenericDatasetAccessor):
         if guesses_lon.index(lon_name) != guesses_lat.index(lat_name):
             raise ValueError("Inconsistent lon/lat bound variable names.")
         return lon_name, lat_name
+
+    @property
+    def calendar(self):
+        """The type of calendar used in the file."""
+        calendars = set()
+        for name in self.varnames_time:
+            ndims = len(self._dataset[name].dims)
+            if ndims == 1:
+                first_time = self._dataset[name].values[0]
+            elif ndims == 2:
+                first_time = self._dataset[name].values[0, 0]
+            else:
+                raise ValueError("Bad time variable: %s." % name)
+            try:
+                calendar = first_time.calendar
+            except AttributeError:
+                pass
+            else:
+                calendars.add(calendar)
+        if len(calendars) != 1:
+            raise ValueError("Could not determine calendar.")
+        return list(calendars)[0]
 
     def cell_bounds(self, idx=None):
         """Return the coordinates of the bounds of given grid cell.
