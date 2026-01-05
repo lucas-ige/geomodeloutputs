@@ -12,6 +12,7 @@ from ._accessors_common import CommonDatasetAccessor
 
 @xr.register_dataset_accessor("mar")
 class MARDatasetAccessor(CommonDatasetAccessor):
+    """Accessor for the MAR model."""
 
     def time_coord(self, varname):
         """Return the name of the time coordinate associated with variable."""

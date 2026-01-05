@@ -11,6 +11,7 @@ from ._genutils import method_cacher
 
 @xr.register_dataset_accessor("wizard")
 class WizardDatasetAccessor(CommonDatasetAccessor):
+    """Accessor that guesses what the underlying model is."""
 
     @property
     @method_cacher

@@ -15,6 +15,7 @@ from ._accessors_common import CommonDatasetAccessor
 
 @xr.register_dataset_accessor("elmerice")
 class ElmerIceDatasetAccessor(CommonDatasetAccessor):
+    """Accessor for the Elmer/Ice model."""
 
     @property
     @method_cacher
