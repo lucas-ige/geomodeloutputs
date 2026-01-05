@@ -15,7 +15,6 @@ from ._accessors_common import CommonDatasetAccessor
 
 @xr.register_dataset_accessor("lmdz")
 class LMDzDatasetAccessor(CommonDatasetAccessor):
-
     surface_types = ("ter", "lic", "oce", "sic")
 
     @property
@@ -97,4 +96,4 @@ class LMDzDatasetAccessor(CommonDatasetAccessor):
         """Return the value of NBP for given grid (Dynamico grid only)."""
         if self.grid_type != "ico":
             raise ValueError("This property is only valid for Dynamico grids.")
-        return {16002: 40}[self.ncells]
+        return {16002: 40, 36002: 60}[self.ncells]
