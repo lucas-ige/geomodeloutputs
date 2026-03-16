@@ -28,9 +28,9 @@ class WizardDatasetAccessor(CommonDatasetAccessor):
                 if model.startswith("regional climate model MARv"):
                     return "mar"
         else:
-            if name == "histmth":
+            if name == "histmth" or name == "histyea":
                 return "lmdz"
-            elif name.startswith("ismip6_"):
+            elif name.startswith("ismip6_") or "_ismip6_" in name:
                 return "elmerice"
         msg = "Existential crisis: I cannot guess which model created me."
         raise ValueError(msg)
