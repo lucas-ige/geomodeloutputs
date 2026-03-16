@@ -92,8 +92,9 @@ def preprocess_dataset(ds):
                 'This function is meant to deal with "months since" time data '
                 'with calendars other than "360-day calendars."'
             )
-        convert = lambda t: datetime_plus_nmonths(start, t, calendar)
-        convert_all = np.vectorize(convert)
+        convert_all = np.vectorize(
+            lambda t: datetime_plus_nmonths(start, t, calendar)
+        )
         out = ds.assign_coords(time=convert_all(ds["time"].values))
         return out
     else:
