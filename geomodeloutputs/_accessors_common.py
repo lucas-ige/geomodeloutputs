@@ -4,7 +4,6 @@
 
 """Module geomodeloutputs: accessors to add functionality to datasets."""
 
-import cftime
 import numpy as np
 import xarray as xr
 import matplotlib as mpl
@@ -161,6 +160,16 @@ class CommonDatasetAccessor(GenericDatasetAccessor):
         if len(calendars) != 1:
             raise ValueError("Could not determine calendar.")
         return list(calendars)[0]
+
+    @property
+    def crs_pyproj(self):
+        """The CRS (pyproj) corresponding to dataset."""
+        pass
+
+    @property
+    def crs_cartopy(self):
+        """The CRS (cartopy) corresponding to dataset."""
+        pass
 
     def cell_bounds(self, idx=None):
         """Return the coordinates of the bounds of given grid cell.
