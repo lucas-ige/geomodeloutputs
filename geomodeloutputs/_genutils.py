@@ -121,7 +121,17 @@ def open_dataset(filepath, **kwargs):
         The opened dataset.
 
     """
-    return preprocess_dataset(xr.open_dataset(filepath, **kwargs))
+    ds = xr.open_dataset(filepath, **kwargs)
+    try:
+        whoami = ds.wizard.whoami
+    except ValueError:
+        return ds.common
+    else:
+        if whoami == "mar":
+            ds = preprocess_dataset(ds)
+            return ds.mar
+        else:
+            return ds.wizard.myself
 
 
 def open_mfdataset(filepath, **kwargs):
