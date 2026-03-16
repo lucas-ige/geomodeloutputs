@@ -6,7 +6,6 @@
 
 import functools
 from datetime import datetime
-import pyproj
 import numpy as np
 import xarray as xr
 from .dateutils import (
