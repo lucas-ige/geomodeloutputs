@@ -121,7 +121,11 @@ class ElmerIceDatasetAccessor(CommonDatasetAccessor):
     @method_cacher
     def triangulation(self):
         """Return Triangulation object corresponding to data."""
-        return self[self.meshname + "_face_nodes"].values
+        return Triangulation(
+            self["x"].values[0, :],
+            self["y"].values[0, :],
+            self[self.meshname + "_face_nodes"].values,
+        )
 
     @property
     @method_cacher
