@@ -16,7 +16,7 @@ from ._accessors_generic import _units_mpl as units_mpl
 
 preset_lims = {
     "antarctica": (-3100000, 3100000, -2500000, 2550000),
-    "greenland": (-750000, 920000, -3460000, -533000),
+    "greenland": (-750000, 970000, -3500000, -533000),
 }
 
 preset_crs = {
